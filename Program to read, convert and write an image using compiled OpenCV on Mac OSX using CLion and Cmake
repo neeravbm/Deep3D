@@ -1,0 +1,56 @@
+We'll go over how to create a simple program using [CLion](https://www.jetbrains.com/clion/) and [Cmake](https://cmake.org) in Debug mode.
+
+1. Create a new C++ project, named ReadConvertWrite in CLion.
+2. Go to CLion -> Preferences -> Build, Execution, Deployment -> CMake. In `CMake options` field, enter `-DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_VERBOSE_MAKEFILE=ON`. We are asking CMake to use clang compiler since OpenCV is compiled using Clang. Without using Clang compiler, there might be symbol mismatches. As an example, if OpenCV is compiled using Clang and the program is compiled using c++, then the function `imwrite()` gives a linking error. We are also setting `VERBOSE` to `ON` since we are creating a debug build.
+3. In `Build output path`, enter `build/osx-debug-clang`. This is where the executable will be placed.
+4. Go to Run -> Edit Configurations. In `Environment Variables`, Set `DYLD_PRINT_LIBRARIES` to `1`. As a result, `dyld()` will print out all the library search paths. This is useful when debugging. You may also need to set `DYLD_LIBRARY_PATH` and `DYLD_FALLBACK_LIBRARY_PATH` to `/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang/dist/lib`. This is where the OpenCV libraries are located.
+5. Set `Working Directory` to `/Users/neeravbm/CV/ReadConvertWrite`. This where the root of the source code is.
+6. Set `Configuration` to `Debug`. If you want to create a Release configuration, then set it to `Release`.
+7. Make sure that CMakeLists.txt has the following:
+
+```
+cmake_minimum_required(VERSION 3.6)
+project(ReadConvertWrite)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+set(CMAKE_PREFIX_PATH ${CMAKE_MODULE_PATH} /Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang)
+\# highgui is required for imread(). highgui also automatically includes imgcodecs, which is required for imwrite().
+\# imgproc is required for cvtColor().
+find_package(OpenCV REQUIRED core highgui imgproc)
+
+set(SOURCE_FILES main.cpp)
+add_executable(ReadConvertWrite ${SOURCE_FILES})
+
+target_link_libraries(ReadConvertWrite ${OpenCV_LIBS})
+```
+
+If you are using the Release build, then change `${CMAKE_MODULE_PATH}` to point to OpenCV compiled with Release mode.
+
+8. Here's the contents of `main.cpp`:
+
+```C++
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <iostream>
+
+int main() \{
+    cv::Mat image = cv::imread("images/random-image-19.png");
+
+    if (!image.data) \{
+        std::cerr << "Could not open or find the image." << std::endl;
+        return -1;
+    \}
+
+    cv::Mat bwImage;
+    cv::cvtColor(image, bwImage, CV_BGR2GRAY);
+
+    cv::imwrite("images/random-image-20.png", bwImage);
+
+    cv::imshow("Image", bwImage);
+    cv::waitKey();
+
+    return 0;
+\}
+```

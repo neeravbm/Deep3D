@@ -1,0 +1,43 @@
+Clone OpenCV [git repo](https://github.com/opencv/opencv) in `/Users/neeravbm/Documents/lib`.
+
+```bash
+git clone https://github.com/opencv/opencv.git
+```
+
+## Creating a Release build
+
+Creating a Release build for Mac is very easy. Just execute:
+
+```bash
+/usr/bin/python2.7 platforms/osx/build_framework.py dist/osx-release-clang --without=opencv_world
+```
+
+Make sure to use python2.7 and build without opencv_world module. Building with python3 gives an error. Similarly, building with `opencv_world` module also gives an error. In the above command, `dist/osx-debug-clang` is the build directory. In the directory name, I have added `clang` since that's the compiler that's being used. Any program that uses OpenCV will also need to be compiled using `clang`. Compiling with other compilers and then running the program may give a linking error. As an example, compiling a program that has `imwrite()` function with `c++` compiler gives an error if OpenCV is compiled using `clang`.
+
+The above command will create `dist/osx-release-clang` directory with `'opencv2.framework` and `build` directories inside it. The `include` and `lib` paths that the programs need to use are located in `x86_64-MacOSX/install` directory with the `build` directory.
+
+## Creating a Debug build
+
+### Option 1
+
+Creating a Debug build for Mac is a lot more complicated, primarily since the OpenCV distribution is broken when building with Debug mode. Open `platforms/osx/build_framework.py` and replace the word "Release" with "Debug" everywhere. Open `platforms/ios/build_framework.py` and replace the word "Release" with "Debug" everywhere. In addition, find the function `buildOne()` and replace the line `execute(["cmake", "-P", "cmake_install.cmake"], cwd = builddir)` by `execute(["cmake", "-DBUILD_TYPE=Debug", "-P", "cmake_install.cmake"], cwd = builddir)`. Without this change, 3rd party libraries will be searched in `Release` directory even though they have been build under `Debug` directory. Now execute:
+
+```bash
+/usr/bin/python2.7 platforms/osx/build_framework.py dist/osx-debug-clang --without=opencv_world
+```
+
+The above command will create `dist/osx-debug-clang` diretory with `opencv2.framework` and `build` directories inside it. The `include` and `lib` paths that the programs need to use are located in `x86_64-MacOSX/install` directory with the `build` directory.
+
+### Option 2
+
+Debug build with shared libraries can also be created using Cmake directly. In fact, this method is needed if you want to use Cling. Cling doesn't recognize static libraries with `.a` extension. We need to create dynamic libraries with `.dylib` extension, which this method created.
+
+Clone OpenCV [git repo](https://github.com/opencv/opencv) in `/Users/neeravbm/Documents/lib/OpenCV` and rename the directory to `src`. Create a directory `builds/osx-shared-debug-clang` in `/Users/neeravbm/Documents/lib/OpenCV`. Then execute the following commands:
+
+```bash
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang/dist -DCMAKE_BUILD_TYPE=Debug ../../src
+make
+make install
+```
+
+Above commands will install `include` and `lib` directories under `builds/osx-shared-debug-clang/dist`. For using OpenCV in a program using CMake, use `set(CMAKE_PREFIX_PATH ${CMAKE_MODULE_PATH} /Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang)` in `CMakeLists.txt`.
