@@ -1,0 +1,92 @@
+This article assumes that you have already installed Release and Debug builds of OpenCV at `/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-release-clang` and `/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang` respectively.
+
+## Install Eigen
+
+1. Download Eigen at `/Users/neeravbm/Documents/libs/Eigen/src` from [Eigen website](http://bitbucket.org/eigen/eigen/get/3.3.0.tar.gz).
+
+### Debug build
+2. Create `builds/osx-debug-clang` directory and change into it.
+
+```bash
+cd /Users/neeravbm/Documents/libs/Eigen
+mkdir -p builds/osx-debug-clang
+cd builds/osx-debug-clang
+```
+
+3. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
+make
+make install
+```
+
+This will create `dist` directory with Eigen library.
+
+### Release build
+
+4. Create `builds/osx-release-clang` directory and change into it.
+
+```bash
+cd /Users/neeravbm/Documents/libs/Eigen
+mkdir -p builds/osx-release-clang
+cd builds/osx-release-clang
+```
+
+5. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src
+make
+make install
+```
+
+This will create `dist` directory with Eigen library.
+
+## Install D3D
+
+6. `D3D` folder should have `src` and `builds` directory.
+
+### Debug build
+
+7. Set the environment variable `EIGEN3_ROOT_DIR` pointing to the location of Eigen library's `include` folder.
+
+```bash
+export EIGEN3_ROOT_DIR=/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang/dist/include
+```
+
+8. Create a directory `osx-shared-debug-clang` in `D3D/builds` folder and change into it.
+
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/D3D/builds/osx-shared-debug-clang
+cd /Users/neeravbm/Documents/libs/D3D/builds/osx-shared-debug-clang
+```
+
+9. Build using `cmake`, `make` and `make install`. The assumption is that OpenCV is installed at `/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang`, otherwise change `OpenCV_DIR` variable value accordingly.
+
+```bash
+cmake -DEIGEN_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang/dist/include/eigen3 -DNANOGUI_DIR=/Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-debug-clang/dist -DNANOVG_DIR=/Users/neeravbm/Documents/libs/nanovg -DGLM_LIBRARY_DIR=/Users/neeravbm/Documents/libs/glm -DBOOST_LIBRARYDIR=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang-1.61/stage/lib -DPCL_DIR=/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang -DOpenCV_DIR=/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DD3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Debug ../../src/
+make
+make install
+```
+
+Above will create `dist` directory which has the compiled library.
+
+10. For creating static library, use the `cmake` option `-DD3D_BUILD_SHARED:OFF`.
+
+### Android Release build
+
+10. Create a directory `android-shared-release` in `D3D/builds` folder and change into it.
+
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/D3D/builds/android-shared-release
+cd /Users/neeravbm/Documents/libs/D3D/builds/android-shared-release
+```
+
+11. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_TOOLCHAIN_FILE=/Users/neeravbm/Documents/libs/D3D/src/cmake/android-cmake/android.toolchain.cmake -DOpenCV_DIR=/Users/neeravbm/Documents/libs/OpenCV/builds/android-static-release/dist/sdk/native/jni -DANDROID_NATIVE_API_LEVEL=15  -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DANDROID_NDK=/Users/neeravbm/Library/Android/sdk/ndk-bundle ../../src/
+make
+make install
+```

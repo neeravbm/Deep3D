@@ -1,0 +1,43 @@
+A more indepth explanation of LLDB commands is at [Dancing in the debugger](https://www.objc.io/issues/19-debugging/lldb-debugging/).
+
+Here are some commands to analyze raw contents of memory:
+
+1. ```bash
+x &<var_name>
+```
+
+Above outputs contents of memory at location occupied by the variable `<var_name>`.
+
+2. ```bash
+x 0x<addr>
+```
+
+Above outputs contents of memory at address `0x<addr>`.
+
+3. ```bash
+frame variable -L <var_name>
+```
+
+Above outputs the address of `<var_name>` along with raw memory contents. This is useful for seeing vectors.
+
+4. ```bash
+memory read -s4 -ff -c2 0x<addr>
+```
+
+Above outputs formatted memory content at address `0x<addr>`. Argument to `-s` specifies the number of bytes to be formatted together (4 for integer and float, 8 for double, etc.). Argument to `-f` specifies how to format (`f` for float, etc.). Argument to `-c` specifies how many values to read. If you want to look at all the possible arguments to `-f` parameter, execute:
+
+```bash
+memory read -s4 -f -c2 0x00007fbb1940b900
+```
+
+Above will give an error and will list all the possible arguments to `-f` parameter.
+
+5. To manually convert hex code to float or double, [this site](https://gregstoll.dyndns.org/~gregstoll/floattohex/) is useful. Note that you'll need to enter the hex code in reverse order to what's shown by `x` command. As an example:
+
+```bash
+(lldb) x 0x00007fff5608c420
+0x7fff5608c420: 00 00 00 00 09 36 70 40 00 00 00 a0 3b 08 81 40  .....6p@....;..@
+0x7fff5608c430: 00 00 00 c0 a5 41 7a 40 00 00 00 80 68 18 81 40  .....Az@....h..@
+```
+
+Since we are looking at doubles (which occupy 8 bytes), we take `00 00 00 00 09 36 70 40`. Then we reverse them. That becomes `40 70 36 09 00 00 00 00`. Put this value in [this site](https://gregstoll.dyndns.org/~gregstoll/floattohex/) and the actual double value comes out to be 259.377197266.

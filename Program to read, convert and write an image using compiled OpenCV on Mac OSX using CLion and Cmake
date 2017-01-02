@@ -54,3 +54,5 @@ int main() \{
     return 0;
 \}
 ```
+
+9. If you see an error "Agreeing to the Xcode/iOS license requires admin privileges, please re-run as root via sudo", then close CLion, open Xcode, agree to its license, close Xcode and start CLion.

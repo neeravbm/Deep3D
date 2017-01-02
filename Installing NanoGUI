@@ -1,0 +1,47 @@
+1. Clone nanogui recursively from its [github page](https://github.com/wjakob/nanogui).
+
+```bash
+mkdir /Users/neeravbm/Documents/libs/nanogui
+cd /Users/neeravbm/Documents/libs/nanogui
+git clone --recursive https://github.com/wjakob/nanogui.git src
+```
+
+Above will clone `coro`, `eigen`, `glad`, `glfw`, `nanovg` and `pybind11` in `/Users/neeravbm/Documents/libs/nanogui/src/ext` directory.
+
+## Debug build
+
+2. Create a directory `/Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-debug-clang` and change into it.
+
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-debug-clang
+cd /Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-debug-clang
+```
+
+3. Compile using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DNANOGUI_EIGEN_INCLUDE_DIR=/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang/dist/include/eigen3 -DNANOGUI_BUILD_SHARED:BOOL=ON -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src/
+make
+make install
+```
+
+Above will install the library in `/Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-debug-clang/dist` folder. Note that we are using Eigen in `/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang/dist/include/eigen3` instead of the one downloaded by NanoGUI itself.
+
+## Release build
+
+2. Create a directory `/Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-release-clang` and change into it.
+
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-release-clang
+cd /Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-release-clang
+```
+
+3. Compile using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DNANOGUI_EIGEN_INCLUDE_DIR=/Users/neeravbm/Documents/libs/Eigen/builds/osx-release-clang/dist/include/eigen3 -DNANOGUI_BUILD_SHARED:BOOL=ON -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src/
+make
+make install
+```
+
+Above will install the library in `/Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-release-clang/dist` folder. Note that we are using Eigen in `/Users/neeravbm/Documents/libs/Eigen/builds/osx-release-clang/dist/include/eigen3` instead of the one downloaded by NanoGUI itself.

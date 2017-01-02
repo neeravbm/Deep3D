@@ -32,12 +32,71 @@ The above command will create `dist/osx-debug-clang` diretory with `opencv2.fram
 
 Debug build with shared libraries can also be created using Cmake directly. In fact, this method is needed if you want to use Cling. Cling doesn't recognize static libraries with `.a` extension. We need to create dynamic libraries with `.dylib` extension, which this method created.
 
-Clone OpenCV [git repo](https://github.com/opencv/opencv) in `/Users/neeravbm/Documents/lib/OpenCV` and rename the directory to `src`. Create a directory `builds/osx-shared-debug-clang` in `/Users/neeravbm/Documents/lib/OpenCV`. Then execute the following commands:
+Clone OpenCV [git repo](https://github.com/opencv/opencv) in `/Users/neeravbm/Documents/lib/OpenCV` and rename the directory to `src`. Create a directory `builds/osx-shared-debug-clang` in `/Users/neeravbm/Documents/lib/OpenCV`.
+
+Building OpenCV with VTK has an error that it doesn't ask for VTK's `vtkIOGeometry` module. Hence it gives the following error:
 
 ```bash
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang/dist -DCMAKE_BUILD_TYPE=Debug ../../src
+/Users/neeravbm/Documents/libs/OpenCV/src/modules/viz/src/precomp.hpp:119:10: fatal error: 'vtkSTLWriter.h' file not found
+```
+
+To fix the above error, open `cmake/OpenCVDetectVTK.cmake` and add `vtkIOGeometry` inside the `find_package(VTK ...)` command for VTK 7. Here's how that line should look:
+
+```bash
+IF(VTK_FOUND)
+  IF(VTK_RENDERING_BACKEND) #in vtk 7, the rendering backend is exported as a var.
+      find_package(VTK QUIET COMPONENTS vtkRendering${VTK_RENDERING_BACKEND} vtkInteractionStyle vtkRenderingLOD vtkIOPLY vtkFiltersTexture vtkRenderingFreeType vtkIOExport vtkIOGeometry NO_MODULE)
+```
+
+Then execute the following commands:
+
+```bash
+cmake -DVTK_DIR=/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
 make
 make install
 ```
 
 Above commands will install `include` and `lib` directories under `builds/osx-shared-debug-clang/dist`. For using OpenCV in a program using CMake, use `set(CMAKE_PREFIX_PATH ${CMAKE_MODULE_PATH} /Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang)` in `CMakeLists.txt`.
+
+## Creating a Release build using CMake with custom-compiled VTK
+
+Create a directory `/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-release-clang` and change into it.
+
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-release-clang
+cd /Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-release-clang
+```
+
+Building OpenCV with VTK has an error that it doesn't ask for VTK's `vtkIOGeometry` module. Hence it gives the following error:
+
+```bash
+/Users/neeravbm/Documents/libs/OpenCV/src/modules/viz/src/precomp.hpp:119:10: fatal error: 'vtkSTLWriter.h' file not found
+```
+
+To fix the above error, open `cmake/OpenCVDetectVTK.cmake` and add `vtkIOGeometry` inside the `find_package(VTK ...)` command for VTK 7. Here's how that line should look:
+
+```bash
+IF(VTK_FOUND)
+  IF(VTK_RENDERING_BACKEND) #in vtk 7, the rendering backend is exported as a var.
+      find_package(VTK QUIET COMPONENTS vtkRendering${VTK_RENDERING_BACKEND} vtkInteractionStyle vtkRenderingLOD vtkIOPLY vtkFiltersTexture vtkRenderingFreeType vtkIOExport vtkIOGeometry NO_MODULE)
+```
+
+Now compile using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DVTK_DIR=/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
+make
+make install
+```
+
+## Creating an Android Release build
+
+Create a directory `builds/android-static-release` in `/Users/neeravbm/Documents/libs/OpenCV`. Change into this directory, execute `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_TOOLCHAIN_FILE=../../src/platforms/android/android.toolchain.cmake -DANDROID_NDK=/Users/neeravbm/Library/Android/sdk/ndk-bundle -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src
+make
+make install
+```
+
+Above will create `/Users/neeravbm/Documents/libs/OpenCV/builds/android-static-release/dist` folder which can be used by another Android NDK program.

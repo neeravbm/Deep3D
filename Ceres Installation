@@ -1,0 +1,166 @@
+## Install SuiteSparse library
+
+1. Go to [SuiteSparse homepage](http://faculty.cse.tamu.edu/davis/suitesparse.html) and download the latest library from there. Put it in `/Users/neeravbm/Documents/libs/SuiteSparse/src` directory.
+2. The other option is to clone it from [Github](https://github.com/jluttine/suitesparse) but note that this may not be the latest version.
+
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/SuiteSparse
+cd /Users/neeravbm/Documents/libs/SuiteSparse
+git clone https://github.com/jluttine/suitesparse.git src
+```
+3. Go inside `src` directory and execute `make config` to see all the variables that will be used by `make`. They are defined in `SuiteSparse_config/SuiteSparse_config.mk` file. Any of these variables can be overridden by specifying them via command-line. As an example, `make install INSTALL=/my/path BLAS=-lmyblas LAPACK=-lmylapackgoeshere` will install SuiteSparse at `/my/path` while using custom BLAS and LAPACK. Mac OSX comes with BLAS and LAPACK in Accelerate framework and SuiteSparse will be able to find them so we don't need to install them separately.
+
+### Debug build
+
+4. While executing `make config`, look at the `CF` variable. We need to add `-DDEBUG` to it so that a debug build can be built.
+5. Execute the following command to view the variable configurations and make more changes:
+
+```bash
+make INSTALL=/Users/neeravbm/Documents/libs/SuiteSparse/builds/osx-shared-debug-clang CC=/usr/bin/clang CXX=/usr/bin/clang++ CF="-O3 -fexceptions -fPIC -fno-common -DDEBUG" config
+```
+
+6. Execute the following command to install SparseSuite in `/Users/neeravbm/Documents/libs/SparseSuite/builds/osx-shared-debug-clang`.
+
+```bash
+make install INSTALL=/Users/neeravbm/Documents/libs/SuiteSparse/builds/osx-shared-debug-clang CC=/usr/bin/clang CXX=/usr/bin/clang++ CF="-O3 -fexceptions -fPIC -fno-common -DDEBUG"
+```
+
+### Release build
+
+7. Execute the following command to install release build of SparseSuite in `/Users/neeravbm/Documents/libs/SparseSuite/builds/osx-shared-release-clang`.
+
+```bash
+make install INSTALL=/Users/neeravbm/Documents/libs/SuiteSparse/builds/osx-shared-release-clang CC=/usr/bin/clang CXX=/usr/bin/clang++
+```
+
+## Install Google logging module
+
+1. Clone the module from [Github](https://github.com/google/glog).
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/glog
+cd /Users/neeravbm/Documents/libs/glog
+git clone https://github.com/google/glog.git src
+```
+
+### Debug build
+
+2. Create `builds/osx-static-debug-clang` directory.
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/glog/builds/osx-static-debug-clang
+```
+3. Go inside `builds/osx-static-debug-clang` directory and configure a debug build using option `CFLAGS=-g3 -O0`. If you are building a release build, then use `CFLAGS=-O3` instead for better optimization.
+```bash
+cd builds/osx-static-debug-clang
+../../src/configure CC=/usr/bin/clang CXX=/usr/bin/clang++ --prefix=/Users/neeravbm/Documents/libs/glog/builds/osx-static-debug-clang/dist CFLAGS="-g3 -O0"
+```
+For more configuration options, read `/Users/neeravbm/Documents/libs/glog/src/INSTALL` file.
+4. Execute `make` and `make install` commands.
+5. This will create a directory `/Users/neeravbm/Documents/libs/glog/builds/osx-static-debug-clang/dist` which has the include files and compiled static library.
+
+### Release build
+
+6. Create `builds/osx-static-release-clang` directory.
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/glog/builds/osx-static-release-clang
+```
+7. Go inside `builds/osx-static-release-clang` directory and configure a release build using option `CFLAGS=-O3`.
+```bash
+cd builds/osx-static-release-clang
+../../src/configure CC=/usr/bin/clang CXX=/usr/bin/clang++ --prefix=/Users/neeravbm/Documents/libs/glog/builds/osx-static-release-clang/dist CFLAGS="-O3"
+```
+For more configuration options, read `/Users/neeravbm/Documents/libs/glog/src/INSTALL` file.
+8. Execute `make` and `make install` commands.
+9. This will create a directory `/Users/neeravbm/Documents/libs/glog/builds/osx-static-release-clang/dist` which has the include files and compiled static library.
+
+
+## Install GFlags
+
+1. Clone the library from [Github](https://github.com/gflags/gflags).
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/gflags
+cd mkdir -p /Users/neeravbm/Documents/libs/gflags
+git clone https://github.com/gflags/gflags.git src
+```
+
+### Debug build
+
+2. Create `/builds/osx-shared-debug-clang` directory.
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/gflags/builds/osx-shared-debug-clang
+```
+3. Go inside `builds/osx-shared-debug-clang` directory and execute cmake.
+```bash
+cd builds/osx-shared-debug-clang
+cmake -DCMAKE_INSTALL_PREFIX=dist -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
+```
+For more configuration options, read `/Users/neeravbm/Documents/libs/gflags/src/INSTALL.md` file.
+4. Execute `make` and `make install` commands.
+5. This will create a directory `/Users/neeravbm/Documents/libs/gflags/builds/osx-shared-debug-clang/dist` which has the include files as well as compiled shared library.
+
+### Release build
+
+6. Create `/builds/osx-shared-release-clang` directory.
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/gflags/builds/osx-shared-release-clang
+```
+7. Go inside `builds/osx-shared-release-clang` directory and execute cmake.
+```bash
+cd builds/osx-shared-release-clang
+cmake -DCMAKE_INSTALL_PREFIX=dist -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
+```
+For more configuration options, read `/Users/neeravbm/Documents/libs/gflags/src/INSTALL.md` file.
+8. Execute `make` and `make install` commands.
+9. This will create a directory `/Users/neeravbm/Documents/libs/gflags/builds/osx-release-release-clang/dist` which has the include files as well as compiled shared library.
+
+
+## Install Ceres
+
+1. Clone the library from [Github](https://github.com/ceres-solver/ceres-solver).
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/Ceres
+cd /Users/neeravbm/Documents/libs/Ceres
+git clone https://github.com/ceres-solver/ceres-solver.git src
+```
+2. Make sure that Eigen or any other library is not installed using brew otherwise Ceres will use that library instead of the one specified on the command line.
+
+### Debug build
+
+3. Create `builds/osx-shared-debug-clang` directory.
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/builds/osx-shared-debug-clang
+```
+4. Go inside `builds/osx-shared-debug-clang` and execute cmake.
+```bash
+cd builds/osx-shared-debug-clang
+cmake -DCXX11=ON -DBUILD_SHARED_LIBS=ON -DEIGEN_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/Eigen -DSUITESPARSE_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/SuiteSparse/builds/osx-shared-debug-clang/include -DSUITESPARSE_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/SuiteSparse/builds/osx-shared-debug-clang/lib -DGLOG_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/glog/builds/osx-static-debug-clang/dist/include -DGLOG_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/glog/builds/osx-static-debug-clang/dist/lib -DGFLAGS_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/gflags/builds/osx-shared-debug-clang/dist/include -DGFLAGS_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/gflags/builds/osx-shared-debug-clang/dist/lib -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src/
+```
+5. Execute `make`, `make test` (will be very slow for debug builds) and `make install` commands.
+6. This will create a directory `/Users/neeravbm/Documents/libs/Ceres/builds/osx-shared-debug-clang/dist` which has the include files as well as the compiled library.
+
+### Release build
+
+7. Create `builds/osx-shared-release-clang` directory.
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/builds/osx-shared-release-clang
+```
+8. Go inside `builds/osx-shared-release-clang` and execute cmake.
+```bash
+cd builds/osx-shared-release-clang
+cmake -DCXX11=ON -DBUILD_SHARED_LIBS=ON -DEIGEN_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/Eigen/builds/osx-release-clang/dist/include/eigen3 -DSUITESPARSE_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/SuiteSparse/builds/osx-shared-release-clang/include -DSUITESPARSE_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/SuiteSparse/builds/osx-shared-release-clang/lib -DGLOG_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/glog/builds/osx-static-release-clang/dist/include -DGLOG_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/glog/builds/osx-static-release-clang/dist/lib -DGFLAGS_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/gflags/builds/osx-shared-release-clang/dist/include -DGFLAGS_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/gflags/builds/osx-shared-release-clang/dist/lib -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src/
+```
+9. Execute `make`, `make test` and `make install` commands.
+10. This will create a directory `/Users/neeravbm/Documents/libs/Ceres/builds/osx-shared-release-clang/dist` which has the include files as well as the compiled library.
+
+### Release build without CXX11
+
+11. Create `builds/osx-shared-release-clang-not-cxx11` directory.
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/builds/osx-shared-release-clang-not-cxx11
+```
+12. Go inside `builds/osx-shared-release-clang-not-cxx11` and execute cmake.
+```bash
+cd builds/osx-shared-release-clang-not-cxx11
+cmake -DCXX11:BOOL=OFF -DBUILD_SHARED_LIBS=ON -DEIGEN_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/Eigen/builds/osx-release-clang/dist/include/eigen3 -DSUITESPARSE_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/SuiteSparse/builds/osx-shared-release-clang/include -DSUITESPARSE_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/SuiteSparse/builds/osx-shared-release-clang/lib -DGLOG_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/glog/builds/osx-static-release-clang/dist/include -DGLOG_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/glog/builds/osx-static-release-clang/dist/lib -DGFLAGS_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/gflags/builds/osx-shared-release-clang/dist/include -DGFLAGS_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/gflags/builds/osx-shared-release-clang/dist/lib -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src/
+```
+13. Execute `make`, `make test` and `make install` commands.
+14. This will create a directory `/Users/neeravbm/Documents/libs/Ceres/builds/osx-shared-release-clang-not-cxx11/dist` which has the include files as well as the compiled library.
