@@ -89,10 +89,21 @@ git clone https://github.com/gflags/gflags.git src
 mkdir -p /Users/neeravbm/Documents/libs/gflags/builds/osx-shared-debug-clang
 ```
 3. Go inside `builds/osx-shared-debug-clang` directory and execute cmake.
+
+On Mac OSX:
+
 ```bash
 cd builds/osx-shared-debug-clang
 cmake -DCMAKE_INSTALL_PREFIX=dist -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
 ```
+
+On Ubuntu:
+
+```bash
+cd builds/ubuntu-shared-debug-gcc
+cmake -DCMAKE_INSTALL_PREFIX=dist -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ ../../src
+```
+
 For more configuration options, read `/Users/neeravbm/Documents/libs/gflags/src/INSTALL.md` file.
 4. Execute `make` and `make install` commands.
 5. This will create a directory `/Users/neeravbm/Documents/libs/gflags/builds/osx-shared-debug-clang/dist` which has the include files as well as compiled shared library.

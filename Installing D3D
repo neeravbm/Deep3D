@@ -64,9 +64,38 @@ cd /Users/neeravbm/Documents/libs/D3D/builds/osx-shared-debug-clang
 
 9. Build using `cmake`, `make` and `make install`. The assumption is that OpenCV is installed at `/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang`, otherwise change `OpenCV_DIR` variable value accordingly.
 
+Mac OSX:
+
 ```bash
 cmake -DEIGEN_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang/dist/include/eigen3 -DNANOGUI_DIR=/Users/neeravbm/Documents/libs/nanogui/builds/osx-shared-debug-clang/dist -DNANOVG_DIR=/Users/neeravbm/Documents/libs/nanovg -DGLM_LIBRARY_DIR=/Users/neeravbm/Documents/libs/glm -DBOOST_LIBRARYDIR=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang-1.61/stage/lib -DPCL_DIR=/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang -DOpenCV_DIR=/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DD3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Debug ../../src/
 make
+make install
+```
+
+Ubuntu:
+
+```bash
+cmake -DEIGEN_INCLUDE_DIR_HINTS=/mnt/Applications/libs/Eigen/builds/ubuntu-debug-gcc/dist/include/eigen3 -DNANOGUI_DIR=/mnt/Applications/libs/nanogui/builds/ubuntu-shared-debug-gcc/dist -DNANOVG_DIR=/mnt/Applications/libs/nanovg -DGLM_LIBRARY_DIR=/mnt/Applications/libs/glm -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DPCL_DIR=/mnt/Applications/libs/pcl/builds/ubuntu-shared-debug-gcc -DOpenCV_DIR=/mnt/Applications/libs/OpenCV/builds/ubuntu-shared-debug-gcc -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DD3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Debug -DD3D_BUILD_GLRENDERER:BOOL=OFF -DD3D_BUILD_CALIB:BOOL=OFF ../../src/
+make -j8
+make install
+```
+
+### Release build
+
+10. Create a directory `ubuntu-shared-release-gcc` in `D3D/builds` folder and change into it.
+
+```bash
+mkdir -p /mnt/Applications/libs/D3D/builds/ubuntu-shared-release-gcc
+cd /mnt/Applications/libs/D3D/builds/ubuntu-shared-release-gcc
+```
+
+11. Build using `cmake`, `make` and `make install`.
+
+Ubuntu:
+
+```bash
+cmake -DEIGEN_INCLUDE_DIR_HINTS=/mnt/Applications/libs/Eigen/builds/ubuntu-release-gcc/dist/include/eigen3 -DNANOGUI_DIR=/mnt/Applications/libs/nanogui/builds/ubuntu-shared-release-gcc/dist -DNANOVG_DIR=/mnt/Applications/libs/nanovg -DGLM_LIBRARY_DIR=/mnt/Applications/libs/glm -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage/lib -DPCL_DIR=/mnt/Applications/libs/pcl/builds/ubuntu-shared-release-gcc -DOpenCV_DIR=/mnt/Applications/libs/OpenCV/builds/ubuntu-shared-release-gcc -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DD3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Release -DD3D_BUILD_GLRENDERER:BOOL=OFF -DD3D_BUILD_CALIB:BOOL=OFF ../../src/
+make -j8
 make install
 ```
 

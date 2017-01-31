@@ -18,8 +18,18 @@ cd /Users/neeravbm/Documents/libs/DBSCAN/builds/osx-shared-debug-clang
 
 4. Compile using `cmake`, `make` and `make install`.
 
+On Mac OSX:
+
 ```bash
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DEIGEN3_DIR=/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang -DCMAKE_BUILD_TYPE=Debug -DBOOST_LIBRARYDIR=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang-1.61/stage/lib -DBOOST_ROOT=/Users/neeravbm/Documents/libs/boost/boost_1_61_0_src -DGLOG_INCLUDE_DIR_HINTS=/Users/neeravbm/Documents/libs/glog/builds/osx-static-debug-clang/dist/include -DGLOG_LIBRARY_DIR_HINTS=/Users/neeravbm/Documents/libs/glog/builds/osx-static-debug-clang/dist/lib -DGTEST_ROOT=/Users/neeravbm/Documents/libs/googletest/builds/osx-debug-clang/dist -DGMOCK_ROOT=/Users/neeravbm/Documents/libs/googletest/builds/osx-debug-clang/dist -DBUILD_SHARED_LIBS:BOOL=ON ../../src/
 make -j4
+make install
+```
+
+On Ubuntu:
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DEigen3_DIR=/mnt/Applications/libs/Eigen/builds/ubuntu-debug-gcc/dist/share/eigen3/cmake -DCMAKE_BUILD_TYPE=Debug -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DGLOG_INCLUDE_DIR_HINTS=/mnt/Applications/libs/glog/builds/ubuntu-static-debug-gcc/dist/include -DGLOG_LIBRARY_DIR_HINTS=/mnt/Applications/libs/glog/builds/ubuntu-static-debug-gcc/dist/lib -DGTEST_ROOT=/mnt/Applications/libs/googletest/builds/ubuntu-debug-gcc/dist -DGMOCK_ROOT=/mnt/Applications/libs/googletest/builds/ubuntu-debug-gcc/dist -DBUILD_SHARED_LIBS:BOOL=ON ../../src/
+make -j8
 make install
 ```

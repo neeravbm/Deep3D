@@ -1,3 +1,34 @@
+## Install LAPACK and BLAS
+
+DO NOT DO THIS STEP. This is an optional step if you want Eigen to use BLAS/LAPACK subroutines. This step is not needed on Mac OSX since Mac already comes with LAPACK and BLAS installed. For Ubuntu, follow the steps below:
+
+1. Clone [github repo](https://github.com/Reference-LAPACK/lapack-release) into `/mnt/Applications/libs/lapack/lapack-release`.
+
+```bash
+mkdir -p /mnt/Applications/libs/lapack
+cd /mnt/Applications/libs/lapack
+git clone https://github.com/Reference-LAPACK/lapack-release.git
+```
+
+### Debug build
+2. Create `builds/ubuntu-shared-debug-gcc` directory and change into it.
+
+```bash
+mkdir -p /mnt/Applications/libs/lapack/builds/ubuntu-shared-debug-gcc
+cd /mnt/Applications/libs/lapack/builds/ubuntu-shared-debug-gcc
+```
+
+3. Compile and install the library using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON -DCBLAS:BOOL=ON ../../lapack-release/
+make -j8
+make install
+```
+
+Above should install LAPACK and BLAS libraries in `/mnt/Applications/libs/lapack/builds/ubuntu-shared-debug-gcc/dist/lib`.
+
+
 ## Install Eigen
 
 1. Download Eigen at `/Users/neeravbm/Documents/libs/Eigen/src` from [Eigen website](http://bitbucket.org/eigen/eigen/get/3.3.0.tar.gz).
@@ -13,9 +44,19 @@ cd builds/osx-debug-clang
 
 3. Build using `cmake`, `make` and `make install`.
 
+Mac OSX:
+
 ```bash
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
 make
+make install
+```
+
+Ubuntu:
+
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DBUILD_SHARED_LIBS:BOOL=ON -DEIGEN_TEST_OPENMP:BOOL=ON ../../src/
+make -j8
 make install
 ```
 
@@ -34,9 +75,19 @@ cd builds/osx-release-clang
 
 5. Build using `cmake`, `make` and `make install`.
 
+Mac OSX:
+
 ```bash
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src
 make
+make install
+```
+
+Ubuntu:
+
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DBUILD_SHARED_LIBS:BOOL=ON -DEIGEN_TEST_OPENMP:BOOL=ON ../../src/
+make -j8
 make install
 ```
 
@@ -73,6 +124,12 @@ This will install `b2` at `/Users/neeravbm/Documents/libs/boost/b2_1.61/bin/b2`.
 
 ### Install boost
 
+4. On Ubuntu, install `libbz2-dev` using apt-get, otherwise `boost_iostreams` library, which is required by PCL, will not be built.
+
+```bash
+sudo apt-get install libbz2-dev
+```
+
 4. Go to `boost_1_61_0` and execute `bootstrap.sh` with option `--show-libraries` to see all the libraries that will be compiled.
 
 ```bash
@@ -84,18 +141,34 @@ cd /Users/neeravbm/Documents/libs/boost/boost_1_61_0_src
 
 5. Compile boost using `b2` in release mode.
 
+Mac OSX:
+
 ```bash
 ../b2_1.61/bin/b2 --build-dir=/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61 --prefix=/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61 --stagedir=/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61/stage variant=release toolset=clang threading=multi
 ```
 
-Above command will install boost's shared and static libraries in `/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61/stage/lib` directory.
+Ubuntu:
+
+```bash
+../b2_1.61/bin/b2 --build-dir=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61 --prefix=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61 --stagedir=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage variant=release toolset=gcc threading=multi
+```
+
+Above command will install boost's shared and static libraries in `/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61/stage/lib` directory. You may see an error that `pyconfig.h` was not found, but you can safely ignore that.
 
 #### Debug build
 
 6. Compile boost using `b2` in debug mode.
 
+Mac OSX:
+
 ```bash
 ../b2/bin/b2 --build-dir=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang --prefix=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang --stagedir=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang/stage variant=debug toolset=clang threading=multi
+```
+
+Ubuntu:
+
+```bash
+../b2_1.61/bin/b2 --build-dir=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61 --prefix=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61 --stagedir=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage variant=debug toolset=gcc threading=multi
 ```
 
 Above command will install boost's shared and static libraries in `/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang/stage/lib` directory.
@@ -125,7 +198,7 @@ make install
 
 This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang/dist` directory.
 
-9. Unfortunately this doesn't seem to create `lib` and `bin` directories so we'll have to create them manually.
+9. Unfortunately, on Mac OSX, this doesn't seem to create `lib` and `bin` directories so we'll have to create them manually.
 
 ```bash
 cd /Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang
@@ -149,7 +222,7 @@ make install
 
 This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang/dist` directory.
 
-11. Unfortunately this doesn't seem to create `lib` and `bin` directories so we'll have to create them manually.
+11. Unfortunately, on Mac OSX, this doesn't seem to create `lib` and `bin` directories so we'll have to create them manually.
 
 ```bash
 cd /Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang
@@ -161,6 +234,8 @@ mv q* dist/bin/
 
 
 ## Install GoogleTest (Optional)
+
+GoogleTest does not come with GTestConfig.cmake so even if you build it, you will have to create your own GTestConfig.cmake to use it. As of now, we are not using it.
 
 12. Clone `googletest` from [github](https://github.com/google/googletest) into `/Users/neeravbm/Documents/libs/googletest/src`.
 
@@ -221,11 +296,45 @@ mv ~/Downloads/qtconnectivity /Users/neeravbm/Documents/libs/qt/qt-everywhere-op
 
 17. Make sure that you have accepted the license agreement of Xcode. Execute `/usr/bin/xcrun -find xcode-select` on command-line. This should give a valid output path such as `/use/bin/xcode-select`. If not, set up Xcode correctly. Now execute `/usr/bin/xcrun -find xcrun`. If it outputs a valid path, then go to the next step. If it gives an error `xcrun: error: unable to find utility "xcrun", not a developer tool or in PATH`, then replace `/usr/bin/xcrun -find xcrun` with `/usr/bin/xcrun -find xcode-select` in `qtbase/configure` and `qtbase/mkspecs/features/mac/default_pre.prf` files.
 
-18. Compile the library using `cmake`, `make` and `make install`. As per [bug](https://bugreports.qt.io/browse/QTBUG-54110), use `-nomake examples`. Make sure to use absolute path after `-prefix` since it doesn't seem to be taking relative paths correctly. Use `-no-framework` if you don't want to build OSX frameworks. As per [PCL compilation tutorial](http://www.pointclouds.org/documentation/tutorials/compiling_pcl_dependencies_windows.php), we don't need to compile Qt demos.
+18. On Ubuntu, install the following libraries using apt-get otherwise `configure` command will complain that `The test for linking against libxcb and support libraries failed! You might need to install dependency packages, or pass -qt-xcb. See src/plugins/platforms/xcb/README.`
+
+```bash
+sudo apt-get install libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxfixes-dev libxi-dev libxrender-dev libxcb1-dev libx11-xcb-dev libxcb-glx0-dev libxcb-keysyms1-dev libxcb-image0-dev libxcb-shm0-dev libxcb-icccm4-dev libxcb-sync0-dev libxcb-xfixes0-dev libxcb-shape0-dev libxcb-randr0-dev libxcb-render-util0-dev libxcb-xinerama0-dev
+```
+
+19. If Ubuntu doesn't have OpenGL installed, install it using apt-get.
+
+```bash
+sudo apt-get install mesa-common-dev libglu1-mesa-dev
+```
+
+As per [Qt documentation](https://wiki.qt.io/Install_Qt_5_on_Ubuntu#cite_note-1), `libglu1-mesa-dev` is necessary for Qt to detect and work with OpenGL.
+
+19. Compile the library using `cmake`, `make` and `make install`. As per [bug](https://bugreports.qt.io/browse/QTBUG-54110), use `-nomake examples`. Make sure to use absolute path after `-prefix` since it doesn't seem to be taking relative paths correctly. Use `-no-framework` if you don't want to build OSX frameworks. As per [PCL compilation tutorial](http://www.pointclouds.org/documentation/tutorials/compiling_pcl_dependencies_windows.php), we don't need to compile Qt demos.
+
+On Mac
 
 ```bash
 ./configure -prefix /Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang -nomake examples -opensource -confirm-license -no-framework -debug-and-release
 make
+make install
+```
+
+On Ubuntu, debug and release need to be different builds.
+
+Debug build:
+
+```bash
+CC="gcc" ./configure -prefix /mnt/Applications/libs/qt/builds/ubuntu-debug-gcc -opensource -confirm-license -debug
+make -j8
+make install
+```
+
+Release build:
+
+```bash
+CC="gcc" ./configure -prefix /mnt/Applications/libs/qt/builds/ubuntu-release-gcc -opensource -confirm-license -release
+make -j8
 make install
 ```
 
@@ -254,8 +363,18 @@ cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang
 
 21. Build using `cmake`, `make` and `make install`.
 
+Mac OSX:
+
 ```bash
 cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
+make
+make install
+```
+
+Ubuntu:
+
+```bash
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/lib/cmake/Qt5 -DVTK_USE_X:BOOL=ON ../../VTK-7.1.0
 make
 make install
 ```
@@ -274,9 +393,19 @@ cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang
 
 21. Build using `cmake`, `make` and `make install`.
 
+Mac OSX:
+
 ```bash
 cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
 make
+make install
+```
+
+Ubuntu:
+
+```bash
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=OFF -DVTK_USE_X:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/lib/cmake/Qt5 -DVTK_USE_X:BOOL=ON ../../VTK-7.1.0
+make -j8
 make install
 ```
 
@@ -335,6 +464,20 @@ cd /Users/neeravbm/Documents/libs/pcl
 git clone https://github.com/PointCloudLibrary/pcl.git src
 ```
 
+2. PCL expects Qhull's debug and libraries to be located in the same directory, but on Ubuntu, since we are building Qhull multiple times with different build types, this will not be the case. As a result, PCL is not able to find Qhull. Modify lines above `include(FindPackageHandleStandardArgs)` in `/mnt/Applications/libs/pcl/src/cmake/Modules/FindQhull.cmake`.
+
+```bash
+set(QHULL_INCLUDE_DIRS ${QHULL_INCLUDE_DIR})
+if(QHULL_LIBRARY AND QHULL_LIBRARY_DEBUG)
+  set(QHULL_LIBRARIES optimized ${QHULL_LIBRARY} debug ${QHULL_LIBRARY_DEBUG})
+elseif(QHULL_LIBRARY)
+  set(QHULL_LIBRARIES optimized ${QHULL_LIBRARY})
+else(QHULL_LIBRARY AND QHULL_LIBRARY_DEBUG)
+  set(QHULL_LIBRARIES debug ${QHULL_LIBRARY_DEBUG})
+  set(QHULL_LIBRARY ${QHULL_LIBRARY_DEBUG})
+endif(QHULL_LIBRARY AND QHULL_LIBRARY_DEBUG)
+```
+
 ### Release build
 
 2. Create a directory `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-clang`.
@@ -346,9 +489,19 @@ cd /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-clang
 
 3. Compile the library using `cmake`, `make` and `make install`.
 
+Mac OSX:
+
 ```bash
 cmake -DEIGEN_ROOT=/Users/neeravbm/Documents/libs/Eigen/builds/osx-release-clang/dist/include -DFLANN_ROOT=/Users/neeravbm/Documents/libs/flann/builds/osx-shared-release-clang/dist -DQHULL_ROOT=/Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang/dist -DVTK_DIR=/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang -DBOOST_ROOT=/Users/neeravbm/Documents/libs/boost/boost_1_61_0_src -DBOOST_LIBRARYDIR=/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src/
 make
+make install
+```
+
+Ubuntu:
+
+```bash
+cmake -DEIGEN_ROOT=/mnt/Applications/libs/Eigen/builds/ubuntu-release-gcc/dist/include -DFLANN_ROOT=/mnt/Applications/libs/flann/builds/ubuntu-shared-release-gcc/dist -DQHULL_ROOT=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc/dist -DVTK_DIR=/mnt/Applications/libs/vtk/builds/ubuntu-shared-release-gcc -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src
+make -j8
 make install
 ```
 
@@ -372,9 +525,20 @@ cd /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang
 
 6. Compile the library using `cmake`, `make` and `make install`.
 
+Mac OSX:
+
 ```bash
 cmake -DEIGEN_ROOT=/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang/dist/include -DFLANN_ROOT=/Users/neeravbm/Documents/libs/flann/builds/osx-shared-debug-clang/dist -DQHULL_ROOT=/Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang/dist -DVTK_DIR=/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang -DBOOST_ROOT=/Users/neeravbm/Documents/libs/boost/boost_1_61_0_src -DBOOST_LIBRARYDIR=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src/
 ```
+
+Ubuntu:
+
+```bash
+cmake -DEIGEN_ROOT=/mnt/Applications/libs/Eigen/builds/ubuntu-debug-gcc/dist/include -DFLANN_ROOT=/mnt/Applications/libs/flann/builds/ubuntu-shared-debug-gcc/dist -DQHULL_ROOT=/mnt/Applications/libs/qhull/builds/ubuntu-debug-gcc/dist -DVTK_DIR=/mnt/Applications/libs/vtk/builds/ubuntu-shared-debug-gcc -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
+make -j8
+make install
+```
+
 
 Above command will compile PCL in `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang/dist`.
 
