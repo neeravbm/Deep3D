@@ -43,6 +43,101 @@ make install
 
 This will create `dist` directory with Eigen library.
 
+## Install SNAP
+
+6. Clone SNAP [github repo](https://github.com/snap-stanford/snap) into `/mnt/Applications/libs/SNAP/src`.
+
+```bash
+mkdir -p /mnt/Applications/libs/SNAP
+cd /mnt/Applications/libs/SNAP
+git clone https://github.com/snap-stanford/snap.git src
+```
+
+7. Unfortunately SNAP repo doesn't use `cmake` and executing `make` creates in-source executables. Instead we'll add a third-party `CMakeLists.txt` file from [ObiWahn's github repo](https://github.com/ObiWahn/snap/blob/f53f598b3f677da93263e25d364218a7d1c34483/cmake/CMakeLists.txt).
+
+```bash
+cd src
+mkdir cmake
+cd cmake
+vim CMakeLists.txt
+Copy the CMakeLists.txt content here and save CMakeLists.txt
+```
+
+## Install Qthreads
+
+6. Qthreads is needed for MTGL. Clone it from its [github repository](https://github.com/Qthreads/qthreads) into `/mnt/Applications/libs/Qthreads/src`.
+
+```bash
+mkdir /mnt/Applications/libs/Qthreads
+cd /mnt/Applications/libs/Qthreads
+git clone https://github.com/Qthreads/qthreads.git src
+```
+
+### Release build
+
+7. Generate `configure` using `automake`.
+
+On Ubuntu:
+
+```bash
+cd /mnt/Applications/libs/Qthreads/src
+sudo apt-get install autotools-dev automake build-essential libtool
+./automake
+```
+
+8. Create `/mnt/Applications/libs/Qthreads/builds/ubuntu-release-gcc` and change into it.
+
+```bash
+mkdir -p /mnt/Applications/libs/Qthreads/builds/ubuntu-release-gcc
+cd /mnt/Applications/libs/Qthreads/builds/ubuntu-release-gcc
+```
+
+9. Configue and compile.
+
+```bash
+CC=/usr/bin/gcc ../../src/configure --prefix=/mnt/Applications/libs/Qthreads/builds/ubuntu-release-gcc/dist
+make -j8
+make install
+```
+
+Above command will install `Qthreads` library into `/mnt/Applications/libs/Qthreads/builds/ubuntu-release-gcc/dist`.
+
+
+## Install MTGL
+
+10. MTGL is a high-performance multi-threaded graph library. We need to use it for Connected Components algorithm that's required in Euclidean cluster extraction. Download the source code from [its website](https://software.sandia.gov/trac/mtgl/downloader/download/file/1/mtgl-1.1.1.tar.gz). You'll most likely need to fill up a form. Copy the code to `/mnt/Applications/libs/MTGL/src` folder.
+
+```bash
+mkdir /mnt/Applications/libs/MTGL
+cd /mnt/Applications/libs/MTGL
+Copy mtgl-1.1.1.tar.gz here
+tar -zxvf mtgl-1.1.1.tar.gz
+rm mtgl-1.1.1.tar.gz
+```
+
+### Release build
+
+On Ubuntu:
+
+11. Create directory `/mnt/Applications/libs/Qthreads/builds/ubuntu-release-gcc` and change into it.
+
+```bash
+mkdir -p /mnt/Applications/libs/Qthreads/builds/ubuntu-gcc
+cd /mnt/Applications/libs/Qthreads/builds/ubuntu-gcc
+```
+
+12. Configure and compile.
+
+```bash
+#CC=/usr/bin/gcc ../../mtgl-1.1.1/configure --prefix=/mnt/Applications/libs/mtgl/builds/ubuntu-gcc/dist --with-qthreads=/mnt/Applications/libs/Qthreads/builds/ubuntu-release-gcc/dist
+CC=/usr/bin/gcc CXX=/usr/bin/g++ ../../mtgl-1.1.1/configure --prefix=/mnt/Applications/libs/mtgl/builds/ubuntu-gcc/dist --with-openmp
+make -j8
+make install
+```
+
+Above will install MTGL library in `/mnt/Applications/libs/mtgl/builds/ubuntu-gcc/dist`.
+
+
 ## Install D3D
 
 6. `D3D` folder should have `src` and `builds` directory.
@@ -75,7 +170,7 @@ make install
 Ubuntu:
 
 ```bash
-cmake -DEIGEN_INCLUDE_DIR_HINTS=/mnt/Applications/libs/Eigen/builds/ubuntu-debug-gcc/dist/include/eigen3 -DNANOGUI_DIR=/mnt/Applications/libs/nanogui/builds/ubuntu-shared-debug-gcc/dist -DNANOVG_DIR=/mnt/Applications/libs/nanovg -DGLM_LIBRARY_DIR=/mnt/Applications/libs/glm -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DPCL_DIR=/mnt/Applications/libs/pcl/builds/ubuntu-shared-debug-gcc -DOpenCV_DIR=/mnt/Applications/libs/OpenCV/builds/ubuntu-shared-debug-gcc -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DD3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Debug -DD3D_BUILD_GLRENDERER:BOOL=OFF -DD3D_BUILD_CALIB:BOOL=OFF ../../src/
+cmake -DEIGEN_INCLUDE_DIR_HINTS=/mnt/Applications/libs/Eigen/builds/ubuntu-debug-gcc/dist/include/eigen3 -DNANOGUI_DIR=/mnt/Applications/libs/nanogui/builds/ubuntu-shared-debug-gcc/dist -DNANOVG_DIR=/mnt/Applications/libs/nanovg -DGLM_LIBRARY_DIR=/mnt/Applications/libs/glm -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DPCL_DIR=/mnt/Applications/libs/pcl/builds/ubuntu-shared-debug-gcc -DOpenCV_DIR=/mnt/Applications/libs/OpenCV/builds/ubuntu-shared-debug-gcc -DMTGL_DIR=/mnt/Applications/libs/mtgl/builds/ubuntu-gcc/dist -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DD3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Debug -DD3D_BUILD_GLRENDERER:BOOL=OFF -DD3D_BUILD_CALIB:BOOL=OFF ../../src/
 make -j8
 make install
 ```
@@ -94,7 +189,7 @@ cd /mnt/Applications/libs/D3D/builds/ubuntu-shared-release-gcc
 Ubuntu:
 
 ```bash
-cmake -DEIGEN_INCLUDE_DIR_HINTS=/mnt/Applications/libs/Eigen/builds/ubuntu-release-gcc/dist/include/eigen3 -DNANOGUI_DIR=/mnt/Applications/libs/nanogui/builds/ubuntu-shared-release-gcc/dist -DNANOVG_DIR=/mnt/Applications/libs/nanovg -DGLM_LIBRARY_DIR=/mnt/Applications/libs/glm -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage/lib -DPCL_DIR=/mnt/Applications/libs/pcl/builds/ubuntu-shared-release-gcc -DOpenCV_DIR=/mnt/Applications/libs/OpenCV/builds/ubuntu-shared-release-gcc -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DD3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Release -DD3D_BUILD_GLRENDERER:BOOL=OFF -DD3D_BUILD_CALIB:BOOL=OFF ../../src/
+cmake -DEIGEN_INCLUDE_DIR_HINTS=/mnt/Applications/libs/Eigen/builds/ubuntu-release-gcc/dist/include/eigen3 -DNANOGUI_DIR=/mnt/Applications/libs/nanogui/builds/ubuntu-shared-release-gcc/dist -DNANOVG_DIR=/mnt/Applications/libs/nanovg -DGLM_LIBRARY_DIR=/mnt/Applications/libs/glm -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage/lib -DPCL_DIR=/mnt/Applications/libs/pcl/builds/ubuntu-shared-release-gcc -DOpenCV_DIR=/mnt/Applications/libs/OpenCV/builds/ubuntu-shared-release-gcc -DMTGL_DIR=/mnt/Applications/libs/mtgl/builds/ubuntu-gcc/dist -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DD3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Release -DD3D_BUILD_GLRENDERER:BOOL=OFF -DD3D_BUILD_CALIB:BOOL=OFF ../../src/
 make -j8
 make install
 ```

@@ -28,6 +28,25 @@ make install
 
 Above should install LAPACK and BLAS libraries in `/mnt/Applications/libs/lapack/builds/ubuntu-shared-debug-gcc/dist/lib`.
 
+### Release Build
+2. Create `builds/ubuntu-shared-release-gcc` directory and change into it.
+
+```bash
+mkdir -p /mnt/Applications/libs/lapack/builds/ubuntu-shared-release-gcc
+cd /mnt/Applications/libs/lapack/builds/ubuntu-shared-release-gcc
+```
+
+3. Compile and install the library using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON -DCBLAS:BOOL=ON ../../lapack-release/
+make -j8
+make install
+```
+
+Above should install LAPACK and BLAS libraries in `/mnt/Applications/libs/lapack/builds/ubuntu-shared-release-gcc/dist/lib`.
+
+
 
 ## Install Eigen
 

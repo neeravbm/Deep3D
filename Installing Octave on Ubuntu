@@ -1,0 +1,411 @@
+sudo apt-get install texinfo gnuplot-x11 libxft2-dev bison byacc libpcre3-dev gperf flex librsvg2-bin libgraphicsmagick++1-dev gl2ps-dev libreadline6-dev libcurl4-openssl-dev
+
+# Install GLPK
+
+1. Download the latest version of GLPK into `/mnt/Applications/libs/glpk`.
+
+```bash
+mkdir /mnt/Applications/libs/glpk
+cd /mnt/Applications/libs/glpk
+Download latest version of glpk from ftp://ftp.gnu.org/gnu/glpk/
+tar -zxvf glpk-4.60.tar.gz
+rm glpk-4.60.tar.gz
+```
+
+2. Create build directory and change into it.
+
+```bash
+mkdir -p builds/ubuntu-shared-release-gcc
+cd builds/ubuntu-shared-release-gcc
+```
+
+3. Compile.
+
+```bash
+CC=/usr/bin/gcc ../../glpk-4.60/configure --prefix=/mnt/Applications/libs/glpk/builds/ubuntu-shared-release-gcc/dist --enable-static=no
+make -j8
+make install
+```
+
+Above will install GLPK library in `/mnt/Applications/libs/glpk/builds/ubuntu-shared-release-gcc/dist`.
+
+# Install FFTW
+
+For some reason, Octave still doesn't recognize FFTW. Can look into this later.
+
+1. Download the latest version of FFTW from [its webpage](http://www.fftw.org/download.html).
+
+```bash
+mkdir /mnt/Applications/libs/fftw
+cd /mnt/Applications/libs/fftw
+wget http://www.fftw.org/fftw-3.3.6-pl1.tar.gz
+tar -zxvf fftw-3.3.6-pl1.tar.gz
+rm fftw-3.3.6-pl1.tar.gz
+```
+
+2. Create build directory and change into it.
+
+```bash
+mkdir -p builds/ubuntu-shared-release-gcc
+cd builds/ubuntu-shared-release-gcc
+```
+
+3. Compile
+
+```bash
+CC=/usr/bin/gcc ../../fftw-3.3.6-pl1/configure --enable-openmp --enable-static=no --enable-shared=yes --prefix=/mnt/Applications/libs/fftw/builds/ubuntu-shared-release-gcc/dist
+make -j8
+make install
+CC=/usr/bin/gcc ../../fftw-3.3.6-pl1/configure --enable-openmp --enable-static=no --enable-shared=yes --enable-float --prefix=/mnt/Applications/libs/fftw/builds/ubuntu-shared-release-gcc/dist
+make -j8
+make install
+
+```
+
+# Install FLTK
+
+1. Download FLTK library from [its website](http://www.fltk.org/software.php) into `/mnt/Applications/libs/fltk`.
+
+```bash
+mkdir /mnt/Applications/libs/fltk
+cd /mnt/Applications/libs/fltk
+wget http://www.fltk.org/software.php?VERSION=1.3.4&FILE=fltk/1.3.4/fltk-1.3.4-1-source.tar.gz
+tar -zxvf fltk-1.3.4-1-source.tar.gz
+rm fltk-1.3.4-1-source.tar.gz
+```
+
+2. Create build directory and change into it.
+
+```bash
+mkdir -p /mnt/Applications/libs/fltk/builds/ubuntu-release-gcc
+cd /mnt/Applications/libs/fltk/builds/ubuntu-release-gcc
+```
+
+3. Compile.
+
+```bash
+CFLAGS=-fPIC CCFLAGS=-fPIC cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DOPTION_BUILD_SHARED_LIBS:BOOL=ON ../../fltk-1.3.4-1 && make -j8
+make install
+```
+
+Above command will install FLTK library in `/mnt/Applications/libs/fltk/builds/ubuntu-release-gcc/dist`.
+
+# Install QRUpdate
+
+1. Download `QRUpdate` library from [Sourceforge](https://sourceforge.net/projects/qrupdate/) into `/mnt/Applications/libs/qrupdate`.
+
+```bash
+mkdir /mnt/Applications/libs/qrupdate
+Download qrupdate.
+tar -zxvf qrupdate-1.1.2.tar.gz
+rm qrupdate-1.1.2.tar.gz
+```
+
+2. Change `DESTDIR` in `Makeconf` to point to `/mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist`.
+
+```bash
+cd qrupdate-1.1.2
+vim Makeconf
+Change DESTDIR to /mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist
+```
+
+3. Compile
+
+```bash
+make
+make solib
+make install
+```
+
+4. Above installs the library in /mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist/usr/local/lib`. Move them to `/mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist`.
+
+```bash
+cd /mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist/usr/local/lib
+mv lib* /mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist
+cd /mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist
+rm -rf usr
+```
+
+# Install OpenBLAS
+
+This step is not needed if we are using BLAS from LAPACK package. Skip this step and go to the next one.
+
+1. Clone `OpenBLAS` from [github](https://github.com/xianyi/OpenBLAS) into `/mnt/Applications/libs/OpenBLAS`.
+
+```bash
+mkdir /mnt/Applications/libs/OpenBLAS
+cd /mnt/Applications/libs/OpenBLAS
+git clone https://github.com/xianyi/OpenBLAS.git src
+```
+
+2. Change into the source directory, run `make` and `make install`.
+
+```bash
+cd src
+make USE_OPENMP=1
+make PREFIX=/mnt/Applications/libs/OpenBLAS/builds/ubuntu-release-gcc/dist install
+```
+
+OpenBLAS will be installed in `/mnt/Applications/libs/OpenBLAS/builds/ubuntu-release-gcc/dist`.
+
+
+## Install LAPACK and BLAS
+
+DO NOT DO THIS STEP. This is an optional step if you want Eigen to use BLAS/LAPACK subroutines. This step is not needed on Mac OSX since Mac already comes with LAPACK and BLAS installed. For Ubuntu, follow the steps below:
+
+1. Clone [github repo](https://github.com/Reference-LAPACK/lapack-release) into `/mnt/Applications/libs/lapack/lapack-release`.
+
+```bash
+mkdir -p /mnt/Applications/libs/lapack
+cd /mnt/Applications/libs/lapack
+git clone https://github.com/Reference-LAPACK/lapack-release.git
+```
+
+### Debug build
+2. Create `builds/ubuntu-shared-debug-gcc` directory and change into it. 
+
+```bash
+mkdir -p /mnt/Applications/libs/lapack/builds/ubuntu-shared-debug-gcc
+cd /mnt/Applications/libs/lapack/builds/ubuntu-shared-debug-gcc
+```
+
+3. Compile and install the library using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON -DCBLAS:BOOL=ON ../../lapack-release/
+make -j8 
+make install
+```
+
+Above should install LAPACK and BLAS libraries in `/mnt/Applications/libs/lapack/builds/ubuntu-shared-debug-gcc/dist/lib`.
+
+### Release Build
+2. Create `builds/ubuntu-shared-release-gcc` directory and change into it. 
+
+```bash
+mkdir -p /mnt/Applications/libs/lapack/builds/ubuntu-shared-release-gcc
+cd /mnt/Applications/libs/lapack/builds/ubuntu-shared-release-gcc
+```
+
+3. Compile and install the library using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON -DCBLAS:BOOL=ON ../../lapack-release/
+make -j8 
+make install
+```
+
+Above should install LAPACK and BLAS libraries in `/mnt/Applications/libs/lapack/builds/ubuntu-shared-release-gcc/dist/lib`.
+
+
+# Install Metis and Suitesparse
+
+1. Download Suitesparse from [its website](http://faculty.cse.tamu.edu/davis/suitesparse.html) into `/mnt/Applications/libs/suitesparse`.
+
+```bash
+mkdir /mnt/Applications/libs/suitesparse
+cd /mnt/Applications/libs/suitesparse
+wget http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.4.tar.gz
+tar -zxvf SuiteSparse-4.5.4.tar.gz
+mv SuiteSparse src
+rm SuiteSparse-4.5.4.tar.gz
+```
+
+2. Create build directory for Metis and change into it.
+
+```bash
+mkdir -p /mnt/Applications/libs/suitesparse/builds/metis-ubuntu-static-release-gcc
+cd /mnt/Applications/libs/suitesparse/builds/metis-ubuntu-static-release-gcc
+```
+
+3. Compile Metis using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DGKLIB_PATH=/mnt/Applications/libs/suitesparse/src/metis-5.1.0/GKlib ../../src/metis-5.1.0
+make -j8
+make install
+```
+
+Above will install Metis library in `/mnt/Applications/libs/suitesparse/builds/metis-ubuntu-static-release-gcc`.
+
+2. Create `include` and `lib` directories.
+
+```bash
+mkdir -p builds/ubuntu-shared-release-gcc/dist/include
+mkdir -p builds/ubuntu-shared-release-gcc/dist/lib
+```
+
+3. Compile and install.
+
+```bash
+make INSTALL=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist CUDA=no BLAS=/mnt/Applications/libs/OpenBLAS/builds/ubuntu-release-gcc/dist/lib/libopenblas.so LAPACK=/mnt/Applications/libs/lapack/builds/ubuntu-shared-release-gcc/dist/lib/liblapack.so MY_METIS_LIB=/mnt/Applications/libs/suitesparse/builds/metis-ubuntu-static-release-gcc/dist/lib/libmetis.a MY_METIS_INC=/mnt/Applications/libs/suitesparse/builds/metis-ubuntu-static-release-gcc/dist/include -j8 library
+make INSTALL=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist CUDA=no BLAS=/mnt/Applications/libs/OpenBLAS/builds/ubuntu-release-gcc/dist/lib/libopenblas.so LAPACK=/mnt/Applications/libs/lapack/builds/ubuntu-shared-release-gcc/dist/lib/liblapack.so MY_METIS_LIB=/mnt/Applications/libs/suitesparse/builds/metis-ubuntu-static-release-gcc/dist/lib/libmetis.a MY_METIS_INC=/mnt/Applications/libs/suitesparse/builds/metis-ubuntu-static-release-gcc/dist/include install
+```
+
+Above will install Suitesparse in `/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist`.
+
+
+# Install ARPACK-Autotools
+
+ARPACK-Autotools is not getting recoginzed by Octave but `eigs()` function, which ARPACK provides, still seems to work in Octave. So use this version.
+
+1. Clone ARPACK with Autotools from [its website](https://mathema.tician.de/software/arpack/) into `/mnt/Applications/libs/ARPACK`. Make sure to not download it from its [original website](http://www.caam.rice.edu/software/ARPACK/). The original source code only creates static library while for Octave, we need to create a shared library.
+
+```bash
+mkdir /mnt/Applications/libs/ARPACK
+cd /mnt/Applications/libs/ARPACK
+git clone http://git.tiker.net/trees/arpack-autotools.git
+```
+
+2. Initialize using autotools.
+
+```bash
+cd arpack-autotools
+aclocal
+autoconf
+autoreconf -i
+```
+
+3. Create the build directory and change into it.
+
+```bash
+mkdir -p /mnt/Applications/libs/ARPACK/builds/ubuntu-shared-release-gcc
+cd /mnt/Applications/libs/ARPACK/builds/ubuntu-shared-release-gcc
+```
+
+4. Configure and compile.
+
+```bash
+../../arpack-autotools/configure --prefix=/mnt/Applications/libs/ARPACK/builds/ubuntu-shared-release-gcc/dist --enable-shared=yes --enable-static=no
+make -j8
+make install
+```
+
+# Install ARPACK
+
+Octave does not compile using this version of ARPACK even though we enable `-fPIC`. Use the previous step instead.
+
+1. Download ARPACK from [its website](http://www.caam.rice.edu/software/ARPACK/) in `/mnt/Applications/libs/ARPACK`.
+
+```bash
+mkdir /mnt/Applications/libs/ARPACK
+cd /mnt/Applications/libs/ARPACK
+wget http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz
+tar -zxvf arpack96.tar.gz
+rm arpack96.tar.gz
+mv ARPACK src
+cd src
+```
+
+2. We are using our custom-compiled BLAS and LAPACK so make sure that `DIRS` variable doesn't include paths to `BLAS` and `ATLAS` within `ARPACK`. Also set `PLAT`, `MAKE`, `home`,`FFLAGS`, `LAPACKLIB` and `BLASLIB` variables to `` (empty), `/usr/bin/make`, `/mnt/Applications/libs/ARPACK/src`, `-O` (remove `-cg89`), `/mnt/Applications/libs/lapack/ubuntu-shared-release-gcc/dist/lib/liblapack.so` and `/mnt/Applications/libs/OpenBLAS/builds/ubuntu-release-gcc/dist/lib/libblas.so` respectively.
+
+3. Open `UTIL/second.f` and replace `      EXTERNAL     ETIME` by `*     EXTERNAL     ETIME`, in effect, commenting out the line.
+
+4. Octave requires shared library of ARPACK or a static library compiled with -fPIC option. So open `ARmake.inc` and add the option `-fPIC` to `FFLAGS`. `FFLAGS` should look like:
+
+```bash
+FFLAGS = -O -fPIC
+```
+
+5. Compile and move the library to `/mnt/Applications/libs/ARPACK/builds/ubuntu-static-release-gcc/dist`.
+
+```bash
+CC=/usr/bin/gcc make lib
+mkdir -p /mnt/Applications/libs/ARPACK/builds/ubuntu-static-release-gcc/dist/lib
+mv libarpack_.a /mnt/Applications/libs/ARPACK/builds/ubuntu-static-release-gcc/dist/lib/libarpack.a
+```
+
+# Install ARPACK-NG
+
+Octave does not seem to recognize this ARPACK-NG library but that may change in future since it's in active development and is supported by Octave.
+
+1. Clone ARPACK-NG from [github](https://github.com/opencollab/arpack-ng) to `/mnt/Applications/libs/arpack-ng`.
+
+```bash
+mkdir /mnt/Applications/libs/arpack-ng
+cd /mnt/Applications/libs/arpack-ng
+git clone https://github.com/opencollab/arpack-ng.git src
+```
+
+# Install HDF5
+
+1. Download HDF5 library from [its website](https://support.hdfgroup.org/HDF5/release/obtainsrc.html#src) into `/mnt/Applications/libs/HDF5`.
+
+```bash
+mkdir /mnt/Applications/libs/HDF5
+cd /mnt/Applications/libs/HDF5
+wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.gz
+tar -zxvf hdf5-1.10.0-patch1.tar.gz
+rm hdf5-1.10.0-patch1.tar.gz
+```
+
+2. Create a build directory and change into it.
+
+```bash
+mkdir -p /mnt/Applications/libs/HDF5/builds/ubuntu-shared-release-gcc
+cd /mnt/Applications/libs/HDF5/builds/ubuntu-shared-release-gcc
+```
+
+3. Compile using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON ../../hdf5-1.10.0-patch1/
+make -j8
+make install
+```
+
+Above command will install HDF5 library in `/mnt/Applications/libs/HDF5/builds/ubuntu-shared-release-gcc/dist`.
+
+# Install Octave
+
+1. Download Octave source from [its website](https://ftp.gnu.org/gnu/octave/) into `/mnt/Applications/Octave`.
+
+```bash
+mkdir /mnt/Applications/Octave
+cd /mnt/Applications/Octave
+wget https://ftp.gnu.org/gnu/octave/octave-4.2.0.tar.gz
+tar -zxvf octave-4.2.0.tar.gz
+rm octave-4.2.0.tar.gz
+```
+
+2. Create build directory and change into it.
+
+```bash
+mkdir -p /mnt/Applications/Octave/builds/ubuntu-release-gcc
+cd /mnt/Applications/Octave/builds/ubuntu-release-gcc
+```
+
+3. To use custom compiled Qt, we need to set `PKG_CONFIG_PATH` environment variable.
+
+```bash
+export PKG_CONFIG_PATH=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/lib/pkgconfig
+```
+
+4. Add Qt bin directory to the path.
+
+```bash
+export PATH=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/bin:$PATH
+```
+
+5. Configure.
+
+```bash
+CC=gcc ../../octave-4.2.0/configure --prefix=/mnt/Applications/Octave/builds/ubuntu-gcc/dist --with-qhull-includedir=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc-no-strict-aliasing/dist/include --with-qhull-libdir=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc-no-strict-aliasing/dist/lib --with-glpk-includedir=/mnt/Applications/libs/glpk/builds/ubuntu-shared-release-gcc/dist/include --with-glpk-libdir=/mnt/Applications/libs/glpk/builds/ubuntu-shared-release-gcc/dist/lib --with-fftw3-includedir=/mnt/Applications/libs/fftw/builds/ubuntu-shared-release-gcc/dist/include --with-fftw3-libdir=/mnt/Applications/libs/fftw/builds/ubuntu-shared-release-gcc/dist/lib --with-qt=5 --with-fltk-prefix=/mnt/Applications/libs/fltk/builds/ubuntu-release-gcc/dist --with-qrupdate-libdir=/mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist --with-amd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-amd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-camd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-camd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-colamd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-colamd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-ccolamd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-ccolamd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-cholmod-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-cholmod-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-arpack-libdir=/mnt/Applications/libs/ARPACK/builds/ubuntu-static-release-gcc/dist/lib --with-hdf5-includedir=/mnt/Applications/libs/HDF5/builds/ubuntu-release-gcc/dist/include --with-hdf5-libdir=/mnt/Applications/libs/HDF5/builds/ubuntu-release-gcc/dist/lib
+```
+
+6. This step is needed if Qt was built from source. Open Makefile and set `UICFLAGS`, `MOCFLAGS`, `LRELEASEFLAGS` and `RCCFLAGS` to `` (empty), in effect, removing the value `-qt5` from all.
+
+7. Compile.
+
+```bash
+LD_LIBRARY_PATH=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/lib make -j8
+make install
+```
+
+Above command will install Octave in `/mnt/Applications/Octave/builds/ubuntu-gcc/dist`.
+
+8. To start Octave, run:
+
+```bash
+LD_LIBRARY_PATH=/mnt/Applications/libs/HDF5/builds/ubuntu-release-gcc/dist/lib:/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib:/mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist/:/mnt/Applications/libs/OpenBLAS/builds/ubuntu-release-gcc/dist/lib/ bash -c './ubuntu-gcc/dist/bin/octave'
+```
