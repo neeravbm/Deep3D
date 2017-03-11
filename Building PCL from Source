@@ -335,7 +335,7 @@ On Mac
 
 ```bash
 ./configure -prefix /Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang -nomake examples -opensource -confirm-license -no-framework -debug-and-release
-make
+make -j4
 make install
 ```
 
