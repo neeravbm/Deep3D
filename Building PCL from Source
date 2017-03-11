@@ -390,6 +390,15 @@ make
 make install
 ```
 
+22. In order for QVTKWidget to appear in Qt Designer, link the library.
+
+Mac OSX:
+
+```bash
+ln -s ~/Documents/libs/vtk/builds/osx-shared-release-clang/lib/libQVTKWidgetPlugin.dylib ~/Documents/libs/qt/builds/osx-static-debug-release-clang/plugins/designer/libQVTKWidgetPlugin.dylib
+```
+
+
 Ubuntu:
 
 ```bash
