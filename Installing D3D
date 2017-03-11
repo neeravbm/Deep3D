@@ -138,6 +138,59 @@ make install
 Above will install MTGL library in `/mnt/Applications/libs/mtgl/builds/ubuntu-gcc/dist`.
 
 
+## Install CGAL
+
+1. Clone `CGAL` from [github](https://github.com/CGAL/cgal) into `/mnt/Applications/libs/CGAL/src`.
+
+```bash
+mkdir /mnt/Applications/libs/CGAL
+cd /mnt/Applications/libs/CGAL
+git clone https://github.com/CGAL/cgal.git src
+```
+
+
+## Install PoissonRecon
+
+1. Clone `PoissonRecon` from [github](https://github.com/mkazhdan/PoissonRecon) to `/mnt/Applications/libs/PoissonRecon/src`.
+
+```bash
+mkdir /mnt/Applications/libs/PoissonRecon
+cd /mnt/Applications/libs/PoissonRecon
+git clone https://github.com/mkazhdan/PoissonRecon.git src
+```
+
+2. Change into `/mnt/Applications/libs/PoissonRecon/src` and add `CMakeLists.txt` at `/mnt/Applications/libs/PoissonRecon/src/CMakeLists.txt`. File should have the following content.
+
+```bash
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.4)
+
+PROJECT(poisson_recon)
+
+ADD_SUBDIRECTORY(Src)
+```
+
+3. Change into `/mnt/Applications/libs/PoissonRecon/src/Src` and add `CMakeLists.txt` at `/mnt/Applications/libs/PoissonRecon/src/Src/CMakeLists.txt`. File should have the following content.
+
+```bash
+FIND_PACKAGE(OpenMP)
+IF (OpenMP_FOUND)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+ENDIF (OpenMP_FOUND)
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-write-strings")
+
+FILE(GLOB_RECURSE INCLUDES
+        "${PROJECT_SOURCE_DIR}/Src/*.h"
+        "${PROJECT_SOURCE_DIR}/Src/*.cpp"
+        "${PROJECT_SOURCE_DIR}/Src/*.inl")
+list(REMOVE_ITEM INCLUDES ${PROJECT_SOURCE_DIR}/Src/PoissonRecon.cpp)
+list(REMOVE_ITEM INCLUDES ${PROJECT_SOURCE_DIR}/Src/SurfaceTrimmer.cpp)
+
+ADD_LIBRARY(poisson_recon ${INCLUDES})
+```
+
+
 ## Install D3D
 
 6. `D3D` folder should have `src` and `builds` directory.

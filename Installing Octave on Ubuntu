@@ -1,4 +1,80 @@
+# Install base libraries.
+
+```bash
 sudo apt-get install texinfo gnuplot-x11 libxft2-dev bison byacc libpcre3-dev gperf flex librsvg2-bin libgraphicsmagick++1-dev gl2ps-dev libreadline6-dev libcurl4-openssl-dev
+```
+
+# Install QScintilla
+
+1. Download QScintilla from [its website](https://www.riverbankcomputing.com/software/qscintilla/download) into `/mnt/Applications/libs/QScintilla`.
+
+```bash
+mkdir /mnt/Applications/libs/QScintilla
+cd /mnt/Applications/libs/QScintilla
+Go to https://www.riverbankcomputing.com/software/qscintilla/download and download the latest QScintilla library.
+tar -zxvf QScintilla_gpl-2.9.4.tar.gz
+rm QScintilla_gpl-2.9.4.tar.gz
+```
+
+2. Octave looks for `libqscintilla-qt5` instead of `libqscintilla`, which QScintilla provides. Hence we need to rename the targets.
+
+File: designer-Qt4Qt5/designer.pro
+
+```bash
+TARGET = qscintillaplugin-qt5
+```
+
+File: Qt4Qt5/features/qscintilla2.prf:
+
+```bash
+        } else {
+            LIBS += -lqscintilla2-qt5
+        }
+    }
+} else {
+    LIBS += -lqscintilla2-qt5
+}
+```
+
+File: Qt4Qt5/qscintilla.pro
+
+```bash
+TARGET = qscintilla2-qt5
+```
+
+
+3. Go to `Qt4Qt5` directory and compile and install it.
+
+```bash
+cd QScintilla_gpl-2.9.4/Qt4Qt5
+export QMAKEFEATURES="$PWD/features"
+/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/bin/qmake 'qscintilla.pro'
+make -j8
+make install
+```
+
+Above command will install `libqscintilla2.so` in Qt's build directory at `/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/lib/`.
+
+4. Go to `designer-Qt4Qt5` directory and compile and install it.
+
+```bash
+cd ../designer-Qt4Qt5
+/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/bin/qmake 'designer.pro' INCLUDEPATH+='../Qt4Qt5' QMAKE_LIBDIR+='../Qt4Qt5'
+make -j8
+make install
+```
+
+Above command will install `libqscintillaplugin.so` in `/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/lib/`.
+
+5. If Python binding is needed and PyQt5 is installed, then go to `Python` directory and compile and install it.
+
+```bash
+cd ../Python
+python3 'configure.py' --pyqt='PyQt5' --qmake='/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/bin/qmake' --qsci-incdir='../Qt4Qt5' --qsci-libdir='../Qt4Qt5'
+make -j8
+make install
+```
+
 
 # Install GLPK
 
@@ -390,7 +466,7 @@ export PATH=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/bin:$PATH
 5. Configure.
 
 ```bash
-CC=gcc ../../octave-4.2.0/configure --prefix=/mnt/Applications/Octave/builds/ubuntu-gcc/dist --with-qhull-includedir=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc-no-strict-aliasing/dist/include --with-qhull-libdir=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc-no-strict-aliasing/dist/lib --with-glpk-includedir=/mnt/Applications/libs/glpk/builds/ubuntu-shared-release-gcc/dist/include --with-glpk-libdir=/mnt/Applications/libs/glpk/builds/ubuntu-shared-release-gcc/dist/lib --with-fftw3-includedir=/mnt/Applications/libs/fftw/builds/ubuntu-shared-release-gcc/dist/include --with-fftw3-libdir=/mnt/Applications/libs/fftw/builds/ubuntu-shared-release-gcc/dist/lib --with-qt=5 --with-fltk-prefix=/mnt/Applications/libs/fltk/builds/ubuntu-release-gcc/dist --with-qrupdate-libdir=/mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist --with-amd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-amd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-camd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-camd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-colamd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-colamd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-ccolamd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-ccolamd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-cholmod-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-cholmod-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-arpack-libdir=/mnt/Applications/libs/ARPACK/builds/ubuntu-static-release-gcc/dist/lib --with-hdf5-includedir=/mnt/Applications/libs/HDF5/builds/ubuntu-release-gcc/dist/include --with-hdf5-libdir=/mnt/Applications/libs/HDF5/builds/ubuntu-release-gcc/dist/lib
+CC=gcc ../../octave-4.2.0/configure --prefix=/mnt/Applications/Octave/builds/ubuntu-gcc/dist --with-qhull-includedir=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc-no-strict-aliasing/dist/include --with-qhull-libdir=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc-no-strict-aliasing/dist/lib --with-glpk-includedir=/mnt/Applications/libs/glpk/builds/ubuntu-shared-release-gcc/dist/include --with-glpk-libdir=/mnt/Applications/libs/glpk/builds/ubuntu-shared-release-gcc/dist/lib --with-fftw3-includedir=/mnt/Applications/libs/fftw/builds/ubuntu-shared-release-gcc/dist/include --with-fftw3-libdir=/mnt/Applications/libs/fftw/builds/ubuntu-shared-release-gcc/dist/lib --with-qt=5 --with-fltk-prefix=/mnt/Applications/libs/fltk/builds/ubuntu-release-gcc/dist --with-qrupdate-libdir=/mnt/Applications/libs/qrupdate/builds/ubuntu-shared-release-gcc/dist --with-amd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-amd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-camd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-camd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-colamd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-colamd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-ccolamd-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-ccolamd-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-cholmod-includedir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/include --with-cholmod-libdir=/mnt/Applications/libs/suitesparse/builds/ubuntu-shared-release-gcc/dist/lib --with-arpack-libdir=/mnt/Applications/libs/ARPACK/builds/ubuntu-shared-release-gcc/dist/lib --with-hdf5-includedir=/mnt/Applications/libs/HDF5/builds/ubuntu-release-gcc/dist/include --with-hdf5-libdir=/mnt/Applications/libs/HDF5/builds/ubuntu-release-gcc/dist/lib
 ```
 
 6. This step is needed if Qt was built from source. Open Makefile and set `UICFLAGS`, `MOCFLAGS`, `LRELEASEFLAGS` and `RCCFLAGS` to `` (empty), in effect, removing the value `-qt5` from all.

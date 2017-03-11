@@ -400,6 +400,11 @@ make install
 
 Above will create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang/dist` containing the compiled library.
 
+22. Link `libQVTKWidgetPlugin.so` in QT to VTK so that QT can use this plugin in the designer.
+
+```bash
+ln -s /mnt/Applications/libs/vtk/builds/ubuntu-shared-release-gcc/dist/plugins/designer/libQVTKWidgetPlugin.so /mnt/Applications/libs/qt/builds/ubuntu-release-gcc/plugins/designer/libQVTKWidgetPlugin.so
+```
 
 ### Debug build
 
@@ -429,6 +434,13 @@ make install
 ```
 
 Above will create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang/dist` containing the compiled library.
+
+22. Link `libQVTKWidgetPlugin.so` in QT to VTK so that QT can use this plugin in the designer.
+
+```bash
+ln -s /mnt/Applications/libs/vtk/builds/ubuntu-shared-debug-gcc/dist/plugins/designer/libQVTKWidgetPlugin.so /mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/plugins/designer/libQVTKWidgetPlugin.so
+```
+
 
 
 ## Install FLANN
@@ -483,7 +495,7 @@ cd /Users/neeravbm/Documents/libs/pcl
 git clone https://github.com/PointCloudLibrary/pcl.git src
 ```
 
-2. PCL expects Qhull's debug and libraries to be located in the same directory, but on Ubuntu, since we are building Qhull multiple times with different build types, this will not be the case. As a result, PCL is not able to find Qhull. Modify lines above `include(FindPackageHandleStandardArgs)` in `/mnt/Applications/libs/pcl/src/cmake/Modules/FindQhull.cmake`.
+2. PCL expects Qhull's debug and release libraries to be located in the same directory, but on Ubuntu, since we are building Qhull multiple times with different build types, this will not be the case. As a result, PCL is not able to find Qhull. Modify lines above `include(FindPackageHandleStandardArgs)` in `/mnt/Applications/libs/pcl/src/cmake/Modules/FindQhull.cmake`.
 
 ```bash
 set(QHULL_INCLUDE_DIRS ${QHULL_INCLUDE_DIR})
@@ -493,8 +505,77 @@ elseif(QHULL_LIBRARY)
   set(QHULL_LIBRARIES optimized ${QHULL_LIBRARY})
 else(QHULL_LIBRARY AND QHULL_LIBRARY_DEBUG)
   set(QHULL_LIBRARIES debug ${QHULL_LIBRARY_DEBUG})
-  set(QHULL_LIBRARY ${QHULL_LIBRARY_DEBUG})
+  set(QHULL_LIBRARY ${QHULL_LIBRARY_DEBUG} CACHE FILEPATH "Qhull library path" FORCE)
+  set(QHULL_LIBRARY_NAME ${QHULL_LIBRARY_DEBUG_NAME} CACHE STRING "Qhull library name" FORCE)
 endif(QHULL_LIBRARY AND QHULL_LIBRARY_DEBUG)
+```
+
+3. On Ubuntu, PCL is not able to find Qt5's Concurrent and OpenGL modules. So open `/mnt/Applications/libs/pcl/src/cmake/pcl_find_qt5.cmake` and change the way Qt5 is found.
+
+```bash
+# Qt5
+
+# See: http://qt-project.org/doc/qt-5.0/qtdoc/cmake-manual.html
+# See: http://qt-project.org/doc/qt-5.0/qtdoc/modules.html
+
+# Qt5 Modules
+set(qt5_modules
+
+# Essentials
+    #Qt5Core
+    Core
+    #Qt5Gui
+    Gui
+    # Qt5Multimedia
+    # Qt5Network
+    # Qt5Qml
+    # Qt5Quick
+    # Qt5SQL
+    # Qt5Test
+    # Qt5WebKit
+    # Qt5WebKitWidgets
+    #Qt5Widgets
+    Widgets
+
+# Add-ons
+    # Qt5ActiveQt
+    #Qt5Concurrent
+    Concurrent
+    # Qt5DBus
+    # Qt5GraphicalEffects
+    # Qt5ImageFormats
+    #Qt5OpenGL
+    OpenGL
+    # Qt5PrintSupport
+    # Qt5Declarative
+    # Qt5Script
+    # Qt5ScriptTools
+    # Qt5Svg
+    # Qt5Xml
+    # Qt5XmlPatterns
+)
+
+# Populate qt4-style cmake variables.
+#foreach(qt5_module ${qt5_modules})
+#    find_package(${qt5_module} QUIET)
+#    MESSAGE(WARNING "${qt5_module}: ${${qt5_module}_FOUND}")
+#    if(${qt5_module}_FOUND)
+#        include_directories(${${qt5_module}_INCLUDE_DIRS})
+#        add_definitions(${${qt5_module}_DEFINITIONS})
+#        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${${qt5_module}_EXECUTABLE_COMPILE_FLAGS}")
+#        list(APPEND QT_LIBRARIES ${${qt5_module}_LIBRARIES})
+#    endif()
+#endforeach()
+
+foreach(qt5_module ${qt5_modules})
+    find_package(Qt5 COMPONENTS ${qt5_module} QUIET)
+    if(Qt5${qt5_module}_FOUND AND Qt5${qt5_module}_INCLUDE_DIRS)
+        include_directories(${Qt5${qt5_module}_INCLUDE_DIRS})
+        add_definitions(${Qt5${qt5_module}_DEFINITIONS})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5${qt5_module}_EXECUTABLE_COMPILE_FLAGS}")
+        list(APPEND QT_LIBRARIES Qt5::${qt5_module})
+    endif(Qt5${qt5_module}_FOUND AND Qt5${qt5_module}_INCLUDE_DIRS)
+endforeach()
 ```
 
 ### Release build
@@ -553,7 +634,7 @@ cmake -DEIGEN_ROOT=/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang/d
 Ubuntu:
 
 ```bash
-cmake -DEIGEN_ROOT=/mnt/Applications/libs/Eigen/builds/ubuntu-debug-gcc/dist/include -DFLANN_ROOT=/mnt/Applications/libs/flann/builds/ubuntu-shared-debug-gcc/dist -DQHULL_ROOT=/mnt/Applications/libs/qhull/builds/ubuntu-debug-gcc/dist -DVTK_DIR=/mnt/Applications/libs/vtk/builds/ubuntu-shared-debug-gcc -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
+cmake -DEIGEN_ROOT=/mnt/Applications/libs/Eigen/builds/ubuntu-debug-gcc/dist/include -DFLANN_ROOT=/mnt/Applications/libs/flann/builds/ubuntu-shared-debug-gcc/dist -DQHULL_ROOT=/mnt/Applications/libs/qhull/builds/ubuntu-debug-gcc/dist -DVTK_DIR=/mnt/Applications/libs/vtk/builds/ubuntu-shared-debug-gcc -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/lib/cmake/Qt5 -DWITH_CUDA:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
 make -j8
 make install
 ```
