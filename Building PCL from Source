@@ -429,7 +429,7 @@ cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang
 Mac OSX:
 
 ```bash
-cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DBUILD_EXAMPLES:BOOL=ON ../../src
 make
 make install
 ```
@@ -437,7 +437,7 @@ make install
 Ubuntu:
 
 ```bash
-cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=OFF -DVTK_USE_X:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/lib/cmake/Qt5 -DVTK_USE_X:BOOL=ON ../../VTK-7.1.0
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=OFF -DVTK_USE_X:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/lib/cmake/Qt5 -DVTK_USE_X:BOOL=ON -DBUILD_EXAMPLES:BOOL=ON ../../VTK-7.1.0
 make -j8
 make install
 ```

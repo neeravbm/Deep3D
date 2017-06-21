@@ -190,6 +190,227 @@ list(REMOVE_ITEM INCLUDES ${PROJECT_SOURCE_DIR}/Src/SurfaceTrimmer.cpp)
 ADD_LIBRARY(poisson_recon ${INCLUDES})
 ```
 
+## Install libtiff (Not required since Unix has libtiff already. May be required on Windows or Mac)
+
+1. Clone `libtiff` from [its unofficial github repo](https://github.com/vadz/libtiff) to `/mnt/Applications/libs/libtiff/src`.
+
+```bash
+mkdir /mnt/Applications/libs/libtiff
+cd /mnt/Applications/libs/libtiff
+git clone https://github.com/vadz/libtiff.git src
+```
+
+### Debug build
+2. Create `builds/ubuntu-shared-debug-gcc` directory and change into it.
+
+```bash
+cd /mnt/Applications/libs/libtiff
+mkdir -p builds/ubuntu-shared-debug-gcc
+cd builds/ubuntu-shared-debug-gcc
+```
+
+3. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=ON ../../src
+make
+make install
+```
+
+### Release build
+3. Create `/mnt/Applications/libs/libtiff/builds/ubuntu-shared-release-gcc` directory and change into it.
+
+```bash
+cd /mnt/Applications/libs/libtiff
+mkdir -p builds/ubuntu-shared-release-gcc
+cd builds/ubuntu-shared-release-gcc
+```
+
+3. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON ../../src
+make
+make install
+```
+
+
+## Install GeoTIFF (Needed for libLAS)
+
+1. Clone `libGeoTiff` from [its download page](http://download.osgeo.org/geotiff/libgeotiff/) to `/mnt/Applications/libs/GeoTIFF/src`.
+
+```bash
+mkdir /mnt/Applications/libs/GeoTIFF
+cd /mnt/Applications/libs/GeoTIFF
+wget http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.4.2.tar.gz
+tar -zxvf libgeotiff-1.4.2.tar.gz
+rm libgeotiff-1.4.2.tar.gz
+```
+
+2. Create `builds/ubuntu-debug-gcc` directory and change into it.
+
+```bash
+cd /mnt/Applications/libs/GeoTIFF
+mkdir -p builds/ubuntu-debug-gcc
+cd builds/ubuntu-debug-gcc
+```
+
+3. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../libgeotiff-1.4.2
+make
+make install
+```
+
+
+## Install libLAS (Needed for pcl_io_extra)
+
+1. Clone `libLAS` from [github](https://github.com/libLAS/libLAS) to `/mnt/Applications/libs/libLAS/src`.
+
+```bash
+mkdir /mnt/Applications/libs/libLAS
+cd /mnt/Applications/libs/libLAS
+git clone https://github.com/libLAS/libLAS.git src
+```
+
+### Debug build
+2. Create `builds/ubuntu-shared-debug-gcc` directory and change into it.
+
+```bash
+cd /mnt/Applications/libs/libLAS
+mkdir -p builds/ubuntu-shared-debug-gcc
+cd builds/ubuntu-shared-debug-gcc
+```
+
+3. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DOSGEO4W_ROOT_DIR=/mnt/Applications/libs/GeoTIFF/builds/ubuntu-debug-gcc/dist ../../src
+make -j8
+make install
+```
+
+
+### Release build
+2. Create `builds/ubuntu-shared-release-gcc` directory and change into it.
+
+```bash
+cd /mnt/Applications/libs/libLAS
+mkdir -p builds/ubuntu-shared-release-gcc
+cd builds/ubuntu-shared-release-gcc
+```
+
+3. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage/lib -DOSGEO4W_ROOT_DIR=/mnt/Applications/libs/GeoTIFF/builds/ubuntu-release-gcc/dist ../../src
+make -j8
+make install
+```
+
+
+## Install Xerces (Required for pcl_io_extra)
+
+1. Download `Xerces` from its [download page](https://xerces.apache.org/xerces-c/download.cgi).
+
+```bash
+mkdir /mnt/Applications/libs/Xerces
+cd /mnt/Applications/libs/Xerces
+wget http://www-us.apache.org/dist//xerces/c/3/sources/xerces-c-3.1.4.tar.gz
+tar -zxvf xerces-c-3.1.4.tar.gz
+rm xerces-c-3.1.4.tar.gz
+```
+
+### Release build
+2. Build a static library using `cmake`, `make` and `make install`. `libE57` requires a static library of `Xerces` and not a shared one. Make sure to disable networking, which disabled NetAccessor. Otherwise it will look for `curl` which may not be installed.
+
+```bash
+cd xerces-c-3.1.4
+./configure --prefix=/mnt/Applications/libs/Xerces/builds/ubuntu-static-release-gcc/dist --enable-shared=no --disable-network
+make -j8
+make install
+```
+
+Above will install `Xerces` shared library in `/mnt/Applications/libs/Xerces/builds/ubuntu-static-release-gcc/dist`.
+
+
+## Install libE57 (Required for pcl_io_extra)
+
+1. Go to [libE57 Downloads page](http://www.libe57.org/download.html) and get the latest source of libE57 FoundationAPI and SimpleAPI source code.
+
+```bash
+mkdir /mnt/Applications/libs/libE57
+cd /mnt/Applications/libs/libE57
+Download the library
+unzip E57RefImpl_src-1.1.312.zip
+rm E57RefImpl_src-1.1.312.zip
+```
+
+### Debug build
+2. Create `builds/ubuntu-shared-debug-gcc` directory and change into it.
+
+```bash
+cd /mnt/Applications/libs/libE57
+mkdir -p builds/ubuntu-shared-debug-gcc
+cd builds/ubuntu-shared-debug-gcc
+```
+
+3. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DXERCES_ROOT=/mnt/Applications/libs/Xerces/builds/ubuntu-static-release-gcc/dist ../../E57RefImpl_src-1.1.312
+make
+make install
+```
+
+### Release build
+2. Create `builds/ubuntu-shared-release-gcc` directory and change into it.
+
+```bash
+cd /mnt/Applications/libs/libE57
+mkdir -p builds/ubuntu-shared-release-gcc
+cd builds/ubuntu-shared-release-gcc
+```
+
+3. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage/lib -DXERCES_ROOT=/mnt/Applications/libs/Xerces/builds/ubuntu-static-release-gcc/dist ../../E57RefImpl_src-1.1.312
+make
+make install
+```
+
+
+## Install pcl_io_extra (required for reading PTX, LAS and E57 files)
+
+1. Clone `pcl_io_extra` from its [github repo](https://github.com/adasta/pcl_io_extra) into `/mnt/Applications/libs/pcl_io_extra/src`.
+
+```bash
+mkdir /mnt/Applications/libs/pcl_io_extra
+cd /mnt/Applications/libs/pcl_io_extra
+git clone https://github.com/adasta/pcl_io_extra.git src
+```
+
+2. Open `/mnt/Applications/libs/pcl_io_extra/src/CMakeLists.txt` and comment out line 53: `FIND_PACKAGE(LIBLAS)`. This is because `/mnt/Applications/libs/pcl_io_extra/src/cmake/FindLIBLAS.cmake` seems to be written for Windows only and doesn't work on Unix. This means that as of now, LAS and E57 formats are not supported.
+
+### Debug build
+3. Create `builds/ubuntu-shared-debug-gcc` directory and change into it. 
+
+```bash
+cd /mnt/Applications/libs/pcl_io_extra
+mkdir -p builds/ubuntu-shared-debug-gcc
+cd builds/ubuntu-shared-debug-gcc
+```
+
+4. Build using `cmake`, `make` and `make install`.
+
+```bash
+cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DPCL_DIR=/mnt/Applications/libs/pcl/builds/ubuntu-shared-debug-gcc -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DBUILD_SHARED_LIBS:BOOL=ON ../../src
+make
+make install
+```
+
 
 ## Install D3D
 
