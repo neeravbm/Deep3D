@@ -371,6 +371,9 @@ cd /Users/neeravbm/Documents/libs/vtk
 git clone https://gitlab.kitware.com/vtk/vtk.git src
 ```
 
+20. In `ThirdParty/netcdf/vtknetcdf/CMakeLists.txt`, set `USE_NETCDF4` to `OFF`. According to [comment by David E DeMarle](http://vtk.1045678.n5.nabble.com/Compilation-error-hdf5-td5736481.html), this ensures that `NETCDF3` is used and HDF5 1.8 that comes with VTK is not used. Using HDF 1.10 with NetCDF4 also gives a compilation error. The other option is to disable the module VTK_Group_StandAlone using `-DVTK_Group_StandAlone:BOOL=OFF` but we don't know whether it will disable some required functionality. We could also disable VTK_Group_StandAlone and enable individual modules as explained on [VTK Modularization and Modernization page](https://blog.kitware.com/vtk-modularization-and-modernization/) but that's too much work that can be done later.
+
+
 ### Release build
 
 20. Create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang` and change into it.
@@ -385,7 +388,7 @@ cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang
 Mac OSX:
 
 ```bash
-cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DVTK_USE_SYSTEM_HDF5:BOOL=ON -DHDF5_ROOT=/Users/neeravbm/Documents/libs/hdf5/builds/osx-shared-release-clang/dist -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
 make
 make install
 ```
@@ -402,7 +405,7 @@ ln -s ~/Documents/libs/vtk/builds/osx-shared-release-clang/lib/libQVTKWidgetPlug
 Ubuntu:
 
 ```bash
-cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/lib/cmake/Qt5 -DVTK_USE_X:BOOL=ON ../../VTK-7.1.0
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=OFF -DVTK_USE_SYSTEM_HDF5:BOOL=ON -DHDF5_ROOT=/mnt/Applications/libs/hdf5/builds/ubuntu-shared-release-gcc/dist -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-release-gcc/lib/cmake/Qt5 -DVTK_USE_X:BOOL=ON ../../VTK-7.1.0
 make
 make install
 ```
@@ -429,7 +432,7 @@ cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang
 Mac OSX:
 
 ```bash
-cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DBUILD_EXAMPLES:BOOL=ON ../../src
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DVTK_USE_SYSTEM_HDF5:BOOL=ON -DHDF5_ROOT=/Users/neeravbm/Documents/libs/hdf5/builds/osx-shared-debug-clang/dist -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
 make
 make install
 ```
@@ -437,7 +440,7 @@ make install
 Ubuntu:
 
 ```bash
-cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=OFF -DVTK_USE_X:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/lib/cmake/Qt5 -DVTK_USE_X:BOOL=ON -DBUILD_EXAMPLES:BOOL=ON ../../VTK-7.1.0
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=OFF -DVTK_USE_X:BOOL=OFF -DVTK_USE_SYSTEM_HDF5:BOOL=ON -DHDF5_ROOT=/mnt/Applications/libs/hdf5/builds/ubuntu-shared-debug-gcc/dist -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/lib/cmake/Qt5 -DVTK_USE_X:BOOL=ON ../../VTK-7.1.0
 make -j8
 make install
 ```

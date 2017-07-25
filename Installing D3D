@@ -452,7 +452,7 @@ make install
 10. To execute the sample on Mac, set `DYLD_FALLBACK_LIBRARY_PATH` on Mac.
 
 ```bash
-export DYLD_FALLBACK_LIBRARY_PATH="export DYLD_FALLBACK_LIBRARY_PATH=/Users/neeravbm/Documents/libs/D3D/builds/osx-shared-debug-clang/dist/lib:/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang/dist/lib:/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang/dist/lib:/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang-1.61/stage/lib:/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/lib:/Users/neeravbm/Documents/libs/flann/builds/osx-shared-debug-clang/dist/lib"
+export DYLD_FALLBACK_LIBRARY_PATH=/Users/neeravbm/Documents/libs/D3D/builds/osx-shared-debug-clang/dist/lib:/Users/neeravbm/Documents/libs/OpenCV/builds/osx-shared-debug-clang/dist/lib:/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang/dist/lib:/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang-1.61/stage/lib:/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/lib:/Users/neeravbm/Documents/libs/flann/builds/osx-shared-debug-clang/dist/lib
 ```
 
 ### Release build
