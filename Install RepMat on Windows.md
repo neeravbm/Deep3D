@@ -163,7 +163,7 @@ jom.exe
 jom.exe install
 ```
 
-### Debug build without Qt
+### Debug build with Qt
 
 1. Create `builds\win64-shared-debug-cl-qt` and change into it.
 
@@ -295,7 +295,7 @@ cd /Users/neeravbm/Documents/libs/pcl
 git clone https://github.com/PointCloudLibrary/pcl.git src
 ```
 
-2. 2. PCL expects Qhull's debug and release libraries to be located in the same directory, but on Ubuntu, since we are building Qhull multiple times with different build types, this will not be the case. As a result, PCL is not able to find Qhull. Modify lines above `include(FindPackageHandleStandardArgs)` in `E:/libs/pcl/src/cmake/Modules/FindQhull.cmake`.
+2. PCL expects Qhull's debug and release libraries to be located in the same directory, but on Ubuntu, since we are building Qhull multiple times with different build types, this will not be the case. As a result, PCL is not able to find Qhull. Modify lines above `include(FindPackageHandleStandardArgs)` in `E:/libs/pcl/src/cmake/Modules/FindQhull.cmake`.
 
 ```bash
 set(QHULL_INCLUDE_DIRS ${QHULL_INCLUDE_DIR})
@@ -309,6 +309,58 @@ else(QHULL_LIBRARY AND QHULL_LIBRARY_DEBUG)
   set(QHULL_LIBRARY_NAME ${QHULL_LIBRARY_DEBUG_NAME} CACHE STRING "Qhull library name" FORCE)
 endif(QHULL_LIBRARY AND QHULL_LIBRARY_DEBUG)
 ```
+
+3. D3D requires the function `pcl::ExtractIndices::applyFilter` to work with `pcl::PointNormal`. But `pcl::ExtractIndices` is not being instantiated in the library with `pcl::PointNormal` type. One option is to compile PCL using `-DPCL_NO_PRECOMPILE` flag but then compilation of `Analyzer.cpp` in D3D fails with the error that the number of objects has exceeded the maximum limit. This error can be fixed by adding `/bigobj` to compile flags as well as definitions using `add_definitions()`. But we haven't tried this approach fully yet. The easier option is: 
+
+a. Open `E:\libs\pcl\src\filters\src\extract_indices.cpp`
+b. Go to the bottom and replace the line `PCL_INSTANTIATE(ExtractIndices, (pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::Normal)(pcl::PointXYZRGBNormal))` with `PCL_INSTANTIATE(ExtractIndices, (pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::Normal)(pcl::PointXYZRGBNormal)(pcl::PointNormal)(pcl::ReferenceFrame)(pcl::SHOT352))`. Note that we are adding `(pcl::PointNormal)(pcl::ReferenceFrame)(pcl::SHOT352)` at the end.
+c. While executing cmake command, make sure to add the options `-DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON`.
+
+
+4. Open `E:\libs\pcl\src\features\include\pcl\features\impl\board.hpp` and add OpenMP for loop in `computeFeature()` function. It should look like:
+
+```
+  #pragma omp parallel for
+  for (int point_idx = 0; point_idx < indices_->size (); ++point_idx)
+  {
+    Eigen::Matrix3f currentLrf;
+    PointOutT &rf = output[point_idx];
+
+    //rf.confidence = computePointLRF (*indices_[point_idx], currentLrf);
+    //if (rf.confidence == std::numeric_limits<float>::max ())
+    if (computePointLRF ((*indices_)[point_idx], currentLrf) == std::numeric_limits<float>::max ())
+    {
+	  // Visual Studio C++ doesn't support OpenMP3, which means critical block is not supported.
+      //#pragma omp critical outputDenseUpdate
+      //{
+        output.is_dense = false;
+      //}
+    }
+
+    for (int d = 0; d < 3; ++d)
+    {
+      rf.x_axis[d] = currentLrf (0, d);
+      rf.y_axis[d] = currentLrf (1, d);
+      rf.z_axis[d] = currentLrf (2, d);
+    }
+  }
+```
+
+At the top of the file, make sure to add 
+
+```
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+```
+
+5. On line 477 of `E:\libs\pcl\src\features\include\pcl\features\impl\board.hpp`, after `float max_hole_prob = -std::numeric_limits<float>::max ();`, inside the function `computePointLRF()`, add:
+
+```
+  if (first_no_border < 0) first_no_border = 0;
+```
+
+
 
 ### Debug build without Qt
 
@@ -358,7 +410,7 @@ cd builds\win64-shared-debug-cl-qt
 2. Compile.
 
 ```
-cmake -G "NMake Makefiles" -DEIGEN_ROOT=E:\libs\Eigen\builds\win64-debug-cl\dist\include -DFLANN_ROOT=E:\libs\flann\builds\win64-debug-cl\dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:\libs\qhull\builds\win64-debug-cl\dist\ -DQHULL_INCLUDE_DIR=E:\libs\qhull\builds\win64-debug-cl\dist\include\ -DVTK_DIR=E:\libs\vtk\builds\win64-shared-debug-cl-qt -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBOOST_LIBRARYDIR=E:\libs\boost\builds\win64-static-cl\lib\ -DBoost_COMPILER=-vc141 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_examples:BOOL=ON ..\..\src\
+cmake -G "NMake Makefiles" -DEIGEN_ROOT=E:\libs\Eigen\builds\win64-debug-cl\dist\include -DFLANN_ROOT=E:\libs\flann\builds\win64-debug-cl\dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:\libs\qhull\builds\win64-debug-cl\dist\ -DQHULL_INCLUDE_DIR=E:\libs\qhull\builds\win64-debug-cl\dist\include\ -DVTK_DIR=E:\libs\vtk\builds\win64-shared-debug-cl-qt -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBOOST_LIBRARYDIR=E:\libs\boost\builds\win64-static-cl\lib\ -DBoost_COMPILER=-vc141 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_examples:BOOL=ON -DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON ..\..\src\
 jom.exe
 jom.exe install
 ```
@@ -377,6 +429,23 @@ cd builds\win64-static-release-cl-qt
 
 ```
 cmake -G "NMake Makefiles" -DEIGEN_ROOT=E:\libs\Eigen\builds\win64-release-cl\dist\include -DFLANN_ROOT=E:\libs\flann\builds\win64-release-cl\dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:\libs\qhull\builds\win64-release-cl\dist\ -DQHULL_INCLUDE_DIR=E:\libs\qhull\builds\win64-release-cl\dist\include\ -DVTK_DIR=E:\libs\vtk\builds\win64-shared-release-cl-qt -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBOOST_LIBRARYDIR=E:\libs\boost\builds\win64-static-cl\lib\ -DBoost_COMPILER=-vc141 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_examples:BOOL=ON ..\..\src\
+jom.exe
+jom.exe install
+```
+
+### Static Debug build with Qt
+
+1. Create `builds\win64-static-debug-cl-qt` and change into it.
+
+```
+mkdir builds\win64-static-debug-cl-qt
+cd builds\win64-static-debug-cl-qt
+```
+
+2. Compile.
+
+```
+cmake -G "NMake Makefiles" -DEIGEN_ROOT=E:\libs\Eigen\builds\win64-debug-cl\dist\include -DFLANN_ROOT=E:\libs\flann\builds\win64-debug-cl\dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:\libs\qhull\builds\win64-debug-cl\dist\ -DQHULL_INCLUDE_DIR=E:\libs\qhull\builds\win64-debug-cl\dist\include\ -DVTK_DIR=E:\libs\vtk\builds\win64-shared-debug-cl-qt -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBOOST_LIBRARYDIR=E:\libs\boost\builds\win64-static-cl\lib\ -DBoost_COMPILER=-vc141 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=OFF -DPCL_SHARED_LIBS:BOOL=OFF -DBUILD_examples:BOOL=ON ..\..\src\
 jom.exe
 jom.exe install
 ```

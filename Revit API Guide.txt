@@ -1,0 +1,4 @@
+Revit API guide: http://help.autodesk.com/view/RVT/2014/ENU/?guid=GUID-7B67C10B-4CBD-4D12-8678-34148035E83E
+http://thebuildingcoder.typepad.com/files/lrug-01-api-ritchiejackson.pdf
+https://www.udemy.com/revitapi/
+http://files.meetup.com/1363528/BRUG-10_01.pdf

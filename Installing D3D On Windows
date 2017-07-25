@@ -1,7 +1,7 @@
 # Installing D3D On Windows
 
 ```
-cmake -G "NMake Makefiles" -DEIGEN_INCLUDE_DIR_HINTS=E:\libs\Eigen\builds\win64-debug-cl\dist\include\eigen3 -DPCL_DIR=E:\libs\pcl\builds\win64-shared-debug-cl-qt\ -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBoost_COMPILER=-vc141 -DCMAKE_INSTALL_PREFIX=dist -D3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=ON ..\..\src
+cmake -G "NMake Makefiles" -DEIGEN_INCLUDE_DIR_HINTS=E:\libs\Eigen\builds\win64-debug-cl\dist\include\eigen3 -DPCL_DIR=E:\libs\pcl\builds\win64-shared-debug-cl-qt\ -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBoost_COMPILER=-vc141 -DCMAKE_INSTALL_PREFIX=dist -DD3D_DOC_INSTALL_PATH=dist/share -DD3D_SAMPLES_INSTALL_PATH=dist/samples -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=ON ..\..\src
 jom.exe
 jom.exe install
 ```
