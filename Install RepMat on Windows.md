@@ -316,6 +316,12 @@ a. Open `E:\libs\pcl\src\filters\src\extract_indices.cpp`
 b. Go to the bottom and replace the line `PCL_INSTANTIATE(ExtractIndices, (pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::Normal)(pcl::PointXYZRGBNormal))` with `PCL_INSTANTIATE(ExtractIndices, (pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::Normal)(pcl::PointXYZRGBNormal)(pcl::PointNormal)(pcl::ReferenceFrame)(pcl::SHOT352))`. Note that we are adding `(pcl::PointNormal)(pcl::ReferenceFrame)(pcl::SHOT352)` at the end.
 c. While executing cmake command, make sure to add the options `-DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON`.
 
+4. RepMat requires GeometricConsistencyGrouping to work with point type `PointXYZRGB`. 
+
+a. Open `E:\libs\pcl\src\recognition\src\cg\geometric_consistency.cpp`.
+b. Go to the bottom and replace the line `PCL_INSTANTIATE_PRODUCT(GeometricConsistencyGrouping, ((pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGBA))((pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGBA)))` with `PCL_INSTANTIATE_PRODUCT(GeometricConsistencyGrouping, ((pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGBA)(pcl::PointXYZRGB))((pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGBA)(pcl::PointXYZRGB)))`. Note that we are adding `(pcl::PointXYZRGB)` twice, once in the middle and once at the end.
+c. While executing cmake command, make sure to add the options `-DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON`.
+
 
 4. Open `E:\libs\pcl\src\features\include\pcl\features\impl\board.hpp` and add OpenMP for loop in `computeFeature()` function. It should look like:
 
