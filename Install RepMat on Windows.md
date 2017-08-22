@@ -366,6 +366,203 @@ At the top of the file, make sure to add
   if (first_no_border < 0) first_no_border = 0;
 ```
 
+6. Open `E:\libs\pcl\src\recognition\include\pcl\recognition\impl\cg\geometric_consistency.hpp`. In function `clusterCorrespondences (std::vector<Correspondences> &model_instances)`, there is a `for` loop on line 104. It looks like:
+
+```
+        for (size_t k = 0; k < consensus_set.size (); ++k)
+        {
+          int scene_index_k = model_scene_corrs_->at (consensus_set[k]).index_match;
+          int model_index_k = model_scene_corrs_->at (consensus_set[k]).index_query;
+          int scene_index_j = model_scene_corrs_->at (j).index_match;
+          int model_index_j = model_scene_corrs_->at (j).index_query;
+          
+          const Eigen::Vector3f& scene_point_k = scene_->at (scene_index_k).getVector3fMap ();
+          const Eigen::Vector3f& model_point_k = input_->at (model_index_k).getVector3fMap ();
+          const Eigen::Vector3f& scene_point_j = scene_->at (scene_index_j).getVector3fMap ();
+          const Eigen::Vector3f& model_point_j = input_->at (model_index_j).getVector3fMap ();
+
+          dist_ref = scene_point_k - scene_point_j;
+          dist_trg = model_point_k - model_point_j;
+
+          double distance = fabs (dist_ref.norm () - dist_trg.norm ());
+
+          if (distance > gc_size_)
+          {
+            is_a_good_candidate = false;
+            break;
+          }
+        }
+
+```
+
+Change the above `for` loop to:
+
+```
+#pragma omp parallel for
+        for (int k = 0; k < consensus_set.size (); ++k)
+        {
+#pragma omp flush (is_a_good_candidate)
+          if (is_a_good_candidate) {
+            int scene_index_k = model_scene_corrs_->at (consensus_set[k]).index_match;
+            int model_index_k = model_scene_corrs_->at (consensus_set[k]).index_query;
+            int scene_index_j = model_scene_corrs_->at (j).index_match;
+            int model_index_j = model_scene_corrs_->at (j).index_query;
+
+            const Eigen::Vector3f& scene_point_k = scene_->at (scene_index_k).getVector3fMap ();
+            const Eigen::Vector3f& model_point_k = input_->at (model_index_k).getVector3fMap ();
+            const Eigen::Vector3f& scene_point_j = scene_->at (scene_index_j).getVector3fMap ();
+            const Eigen::Vector3f& model_point_j = input_->at (model_index_j).getVector3fMap ();
+
+            dist_ref = scene_point_k - scene_point_j;
+            dist_trg = model_point_k - model_point_j;
+
+            double distance = fabs (dist_ref.norm () - dist_trg.norm ());
+
+            if (distance > gc_size_)
+            {
+              is_a_good_candidate = false;
+#pragma omp flush (is_a_good_candidate)
+            }
+          }
+        }
+```
+
+7. Open `E:\libs\pcl\src\sample_consensus\include\pcl\sample_consensus\impl\ransac.hpp`. In function `computeModel(int)`, there is a `while` loop. It looks like:
+
+```
+  while (iterations_ < k && skipped_count < max_skip)
+  {
+    // Get X samples which satisfy the model criteria
+    sac_model_->getSamples (iterations_, selection);
+
+    if (selection.empty ()) 
+    {
+      PCL_ERROR ("[pcl::RandomSampleConsensus::computeModel] No samples could be selected!\n");
+      break;
+    }
+
+    // Search for inliers in the point cloud for the current plane model M
+    if (!sac_model_->computeModelCoefficients (selection, model_coefficients))
+    {
+      //++iterations_;
+      ++skipped_count;
+      continue;
+    }
+
+    // Select the inliers that are within threshold_ from the model
+    //sac_model_->selectWithinDistance (model_coefficients, threshold_, inliers);
+    //if (inliers.empty () && k > 1.0)
+    //  continue;
+
+    n_inliers_count = sac_model_->countWithinDistance (model_coefficients, threshold_);
+
+    // Better match ?
+    if (n_inliers_count > n_best_inliers_count)
+    {
+      n_best_inliers_count = n_inliers_count;
+
+      // Save the current model/inlier/coefficients selection as being the best so far
+      model_              = selection;
+      model_coefficients_ = model_coefficients;
+
+      // Compute the k parameter (k=log(z)/log(1-w^n))
+      double w = static_cast<double> (n_best_inliers_count) * one_over_indices;
+      double p_no_outliers = 1.0 - pow (w, static_cast<double> (selection.size ()));
+      p_no_outliers = (std::max) (std::numeric_limits<double>::epsilon (), p_no_outliers);       // Avoid division by -Inf
+      p_no_outliers = (std::min) (1.0 - std::numeric_limits<double>::epsilon (), p_no_outliers);   // Avoid division by 0.
+      k = log_probability / log (p_no_outliers);
+    }
+
+    ++iterations_;
+    PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] Trial %d out of %f: %d inliers (best is: %d so far).\n", iterations_, k, n_inliers_count, n_best_inliers_count);
+    if (iterations_ > max_iterations_)
+    {
+      PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] RANSAC reached the maximum number of trials.\n");
+      break;
+    }
+  }
+```
+
+Change the above to:
+
+```
+  if (sac_model_->getIndices()->size() < sac_model_->getSampleSize()) {
+    PCL_ERROR ("[pcl::RandomSampleConsensus::computeModel] Can not select %lu unique points out of %lu!\n",
+               sac_model_->getSampleSize(), sac_model_->getIndices()->size());
+  }
+  else {
+    bool continue_iterations = true;
+#pragma omp parallel for reduction(+:skipped_count)
+    for (int i = 0; i < max_iterations_; i++) {
+#pragma omp flush (continue_iterations)
+      if (continue_iterations) {
+	  	std::vector<int> selection;
+			
+        // Get X samples which satisfy the model criteria
+        sac_model_->getSamples (iterations_, selection);
+
+        if (selection.empty ())
+        {
+          PCL_ERROR ("[pcl::RandomSampleConsensus::computeModel] No samples could be selected!\n");
+          continue_iterations = false;
+#pragma omp flush (continue_iterations)
+          continue;
+        }
+
+        // Search for inliers in the point cloud for the current plane model M
+        if (!sac_model_->computeModelCoefficients (selection, model_coefficients))
+        {
+          //++iterations_;
+          ++skipped_count;
+          continue;
+        }
+
+        // Select the inliers that are within threshold_ from the model
+        //sac_model_->selectWithinDistance (model_coefficients, threshold_, inliers);
+        //if (inliers.empty () && k > 1.0)
+        //  continue;
+
+        n_inliers_count = sac_model_->countWithinDistance (model_coefficients, threshold_);
+
+        // Better match ?
+#pragma omp critical (update_best_ransac_model)
+        {
+          if (n_inliers_count > n_best_inliers_count)
+          {
+            n_best_inliers_count = n_inliers_count;
+
+            // Save the current model/inlier/coefficients selection as being the best so far
+            model_              = selection;
+            model_coefficients_ = model_coefficients;
+
+            // Compute the k parameter (k=log(z)/log(1-w^n))
+            double w = static_cast<double> (n_best_inliers_count) * one_over_indices;
+            double p_no_outliers = 1.0 - pow (w, static_cast<double> (selection.size ()));
+            p_no_outliers = (std::max) (std::numeric_limits<double>::epsilon (), p_no_outliers);       // Avoid division by -Inf
+            p_no_outliers = (std::min) (1.0 - std::numeric_limits<double>::epsilon (), p_no_outliers);   // Avoid division by 0.
+            k = log_probability / log (p_no_outliers);
+          }
+
+          ++iterations_;
+        }
+
+        PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] Trial %d out of %f: %d inliers (best is: %d so far).\n", iterations_, k, n_inliers_count, n_best_inliers_count);
+        if (iterations_ > max_iterations_)
+        {
+          PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] RANSAC reached the maximum number of trials.\n");
+          continue_iterations = false;
+#pragma omp flush (continue_iterations)
+        }
+        else if (iterations_ >= k || skipped_count >= max_skip) {
+          continue_iterations = false;
+#pragma omp flush (continue_iterations)
+        }
+      }
+    }
+  }
+```
+
+Also delete the definition of `std::vector<int> selection` from line 60 above.
 
 
 ### Debug build without Qt
