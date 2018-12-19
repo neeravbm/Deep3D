@@ -18,7 +18,7 @@
 cd /mnt/e
 mkdir -p libs/qt
 cd libs/qt
-wget http://download.qt.io/official_releases/qt/5.9/5.9.0/single/qt-everywhere-opensource-src-5.9.0.zip
+wget http://download.qt.io/official_releases/qt/5.9/5.9.2/single/qt-everywhere-opensource-src-5.9.2.zip
 unzip -xvf qt-everywhere-opensource-src-5.9.0.zip
 rm qt-everywhere-opensource-src-5.9.0.zip
 ```
@@ -112,17 +112,31 @@ nmake install
 bootstrap
 ```
 
-3. As per [StackOverflow](https://stackoverflow.com/questions/41464356/build-boost-with-msvc-14-1-vs2017-rc), open `E:\libs\boost\boost_1_62_0\project-config.jam` and replace the line `using msvc ;` with `using msvc : 15.0 : D:\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.10.25017\bin\HostX64\x64\cl.exe ;`.
 
-### Debug and Release builds
+### Debug build
 
 1. Compile. Compiling as shared library using the command `.\b2 --prefix=E:\libs\boost\builds\win64-shared-debug-cl variant=debug threading=multi link=shared install` causes some libraries to be created static and some to be shared. Hence for now, we'll just create static libraries with shared runtime C/C++ libraries.
 
 ```
-.\b2 --prefix=E:\libs\boost\builds\win64-static-cl threading=multi link=static runtime-link=shared address-model=64 install
+.\b2 --prefix=E:\libs\boost\builds\win64-static-debug-cl threading=multi link=static runtime-link=shared variant=debug address-model=64 install
 ```
 
-This will install Boost's debug and release builds in `E:\libs\boost\builds\win64-static-cl`.
+This will install Boost's debug build in `E:\libs\boost\builds\win64-static-debug-cl`.
+
+2. If the above doesn't work, then as per [StackOverflow](https://stackoverflow.com/questions/41464356/build-boost-with-msvc-14-1-vs2017-rc), open `E:\libs\boost\boost_1_62_0\project-config.jam` and replace the line `using msvc ;` with `using msvc : 15.0 : D:\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.10.25017\bin\HostX64\x64\cl.exe ;`.
+
+
+### Release build
+
+1. Compile. Compiling as shared library using the command `.\b2 --prefix=E:\libs\boost\builds\win64-shared-release-cl variant=release threading=multi link=shared install` causes some libraries to be created static and some to be shared. Hence for now, we'll just create static libraries with shared runtime C/C++ libraries.
+
+```
+.\b2 --prefix=E:\libs\boost\builds\win64-static-release-cl threading=multi link=static runtime-link=shared variant=release address-model=64 install
+```
+
+This will install Boost's release build in `E:\libs\boost\builds\win64-static-release-cl`.
+
+2. If the above doesn't work, then as per [StackOverflow](https://stackoverflow.com/questions/41464356/build-boost-with-msvc-14-1-vs2017-rc), open `E:\libs\boost\boost_1_62_0\project-config.jam` and replace the line `using msvc ;` with `using msvc : 15.0 : D:\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.10.25017\bin\HostX64\x64\cl.exe ;`.
 
 
 ## Install VTK
@@ -178,6 +192,22 @@ cd builds\win64-shared-debug-cl-qt
 cmake -G "NMake Makefiles" -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DQT_QMAKE_EXECUTABLE:PATH=E:\libs\qt\builds\win64-shared-debug\bin\qmake.exe -DQt5_DIR=E:\libs\qt\builds\win64-shared-debug\lib\cmake\Qt5 -DVTK_Group_StandAlone:BOOL=OFF -DModule_vtkIOImage:BOOL=ON -DModule_vtkIOParallelXML:BOOL=ON -DModule_vtkIOPLY:BOOL=ON -DModule_vtkIOImport:BOOL=ON -DModule_vtkIOGeometry:BOOL=ON -DModule_vtkDomainsChemistry:BOOL=ON ..\..\VTK-7.1.1
 jom.exe
 jom.exe install
+```
+
+### Release build with Qt
+
+1. Create `builds\win64-shared-release-cl-qt` and change into it.
+
+```
+mkdir builds\win64-shared-release-cl-qt
+cd builds\win64-shared-release-cl-qt
+```
+
+2. Compile. Make sure to disable compilation of Group_StandAlone otherwise it will compile the HDF5 library that's automatically downloaded inside VTK. Since we are disabling StandAlone group, we need to enable other modules inside it which are needed by PCL.
+
+```
+cmake -G "Ninja" -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DQT_QMAKE_EXECUTABLE:PATH=E:\libs\qt\builds\win64-shared-release\bin\qmake.exe -DQt5_DIR=E:\libs\qt\builds\win64-shared-release\lib\cmake\Qt5 -DVTK_Group_StandAlone:BOOL=OFF -DModule_vtkIOImage:BOOL=ON -DModule_vtkIOParallelXML:BOOL=ON -DModule_vtkIOPLY:BOOL=ON -DModule_vtkIOImport:BOOL=ON -DModule_vtkIOGeometry:BOOL=ON -DModule_vtkDomainsChemistry:BOOL=ON ..\..\VTK-7.1.1
+ninja.exe install
 ```
 
 
@@ -251,6 +281,29 @@ cd qhull
 git clone https://github.com/qhull/qhull.git src
 ```
 
+8. Since Qhull's static libraries are going to be used to build PCL's shared libraries, Qhull's static libraries need to be compiled using `-fPIC`. Open `E:\libs\qhull\src\CMakeLists.txt` and set `POSITION_INDEPENDENT_CODE` to `ON` for all the static libraries. Specifically on line 355, code should look as:
+
+```bash
+add_library(${qhull_STATIC} STATIC ${libqhull_SOURCES})
+set_target_properties(${qhull_STATIC} PROPERTIES
+    VERSION ${qhull_VERSION}
+	POSITION_INDEPENDENT_CODE ON)
+
+add_library(${qhull_STATICR} STATIC ${libqhullr_SOURCES})
+set_target_properties(${qhull_STATICR} PROPERTIES
+    VERSION ${qhull_VERSION}
+	POSITION_INDEPENDENT_CODE ON)
+```
+
+On line 375, code should look like:
+
+```bash
+add_library(${qhull_CPP} STATIC ${libqhullcpp_SOURCES})
+set_target_properties(${qhull_CPP} PROPERTIES
+    VERSION ${qhull_VERSION}
+	POSITION_INDEPENDENT_CODE ON)
+```
+
 ### Debug build
 
 1. Create `builds/win64-debug-cl` and change into it.
@@ -313,7 +366,7 @@ endif(QHULL_LIBRARY AND QHULL_LIBRARY_DEBUG)
 3. D3D requires the function `pcl::ExtractIndices::applyFilter` to work with `pcl::PointNormal`. But `pcl::ExtractIndices` is not being instantiated in the library with `pcl::PointNormal` type. One option is to compile PCL using `-DPCL_NO_PRECOMPILE` flag but then compilation of `Analyzer.cpp` in D3D fails with the error that the number of objects has exceeded the maximum limit. This error can be fixed by adding `/bigobj` to compile flags as well as definitions using `add_definitions()`. But we haven't tried this approach fully yet. The easier option is: 
 
 a. Open `E:\libs\pcl\src\filters\src\extract_indices.cpp`
-b. Go to the bottom and replace the line `PCL_INSTANTIATE(ExtractIndices, (pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::Normal)(pcl::PointXYZRGBNormal))` with `PCL_INSTANTIATE(ExtractIndices, (pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::Normal)(pcl::PointXYZRGBNormal)(pcl::PointNormal)(pcl::ReferenceFrame)(pcl::SHOT352))`. Note that we are adding `(pcl::PointNormal)(pcl::ReferenceFrame)(pcl::SHOT352)` at the end.
+b. Go to the bottom and replace the line `PCL_INSTANTIATE(ExtractIndices, (pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::Normal)(pcl::PointXYZRGBNormal))` with `PCL_INSTANTIATE(ExtractIndices, (pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::Normal)(pcl::PointXYZRGBNormal)(pcl::PointNormal)(pcl::ReferenceFrame)(pcl::SHOT352)(pcl::FPFHSignature33))`. Note that we are adding `(pcl::PointNormal)(pcl::ReferenceFrame)(pcl::SHOT352)(pcl::FPFHSignature33)` at the end.
 c. While executing cmake command, make sure to add the options `-DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON`.
 
 4. RepMat requires GeometricConsistencyGrouping to work with point type `PointXYZRGB`. 
@@ -323,7 +376,233 @@ b. Go to the bottom and replace the line `PCL_INSTANTIATE_PRODUCT(GeometricConsi
 c. While executing cmake command, make sure to add the options `-DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON`.
 
 
-4. Open `E:\libs\pcl\src\features\include\pcl\features\impl\board.hpp` and add OpenMP for loop in `computeFeature()` function. It should look like:
+5. IndoorReconstruction requires NormalEstimation and NormalEstimationOMP to work with point type `PointXYZRGBNormal,Normal1`.
+
+a. Open `E:\libs\pcl\pcl_forked\features\src\normal_3d.cpp`.
+b. Go to the bottom and below the line `#ifdef PCL_ONLY_CORE_POINT_TYPES`, remove the existing two lines and add the following:
+```
+  PCL_INSTANTIATE_PRODUCT(NormalEstimation, ((pcl::PointSurfel)(pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::PointNormal)(pcl::PointXYZRGBNormal))((pcl::Normal)(pcl::PointNormal)(pcl::PointXYZRGBNormal)))
+  PCL_INSTANTIATE_PRODUCT(NormalEstimationOMP, ((pcl::PointSurfel)(pcl::PointXYZ)(pcl::PointXYZI)(pcl::PointXYZRGB)(pcl::PointXYZRGBA)(pcl::PointNormal)(pcl::PointXYZRGBNormal))((pcl::Normal)(pcl::PointNormal)(pcl::PointXYZRGBNormal)))
+```
+Note that we are adding `(pcl::PointXYZRGBNormal)` inside the first bracket in both the lines.
+
+6. ScanToBIMLib requires PassThrough filter to work with point type `pcl::Normal`.
+
+a. Open `E:\libs\pcl\src\filters\src\passthrough.cpp`.
+b. Near the bottom, below the line `PCL_INSTANTIATE(PassThrough, PCL_XYZ_POINT_TYPES)`, add the line `PCL_INSTANTIATE(PassThrough, (pcl::Normal))`.
+c. Open `E:\libs\pcl\src\filters\include\pcl\filters\impl\passthrough.hpp`.
+d. Below `#include <pcl/common/io.h>`, add the following code:
+
+```bash
+namespace pcl {
+
+  template <typename PointT, class Enable = void>
+  struct PassthroughHelper {
+    static void resetRemovedIndicesXYZValues(typename pcl::PointCloud<PointT> &output, pcl::IndicesPtr removed_indices_, float user_filter_value_) {}
+
+    static bool passNonFiniteEntriesToRemovedIndices(typename pcl::PointCloud<PointT>::ConstPtr input_, pcl::IndicesPtr indices_, pcl::IndicesPtr removed_indices_, bool extract_removed_indices_, int iii, int* rii) {
+      return true;
+    }
+  };
+
+  template <typename PointT>
+  struct PassthroughHelper<PointT, typename std::enable_if<pcl::traits::has_xyz<PointT>::value>::type> {
+    static void resetRemovedIndicesXYZValues(typename pcl::PointCloud<PointT> &output, pcl::IndicesPtr removed_indices_, float user_filter_value_) {
+      for (int rii = 0; rii < static_cast<int> (removed_indices_->size ()); ++rii)  // rii = removed indices iterator
+        output.points[(*removed_indices_)[rii]].x = output.points[(*removed_indices_)[rii]].y = output.points[(*removed_indices_)[rii]].z = user_filter_value_;
+    }
+
+    static bool passNonFiniteEntriesToRemovedIndices(typename pcl::PointCloud<PointT>::ConstPtr input_, pcl::IndicesPtr indices_, pcl::IndicesPtr removed_indices_, bool extract_removed_indices_, int iii, int* rii) {
+      if (!pcl_isfinite (input_->points[(*indices_)[iii]].x) ||
+          !pcl_isfinite (input_->points[(*indices_)[iii]].y) ||
+          !pcl_isfinite (input_->points[(*indices_)[iii]].z))
+      {
+        if (extract_removed_indices_)
+          (*removed_indices_)[*rii++] = (*indices_)[iii];
+        return false;
+      }
+
+      return true;
+    }
+  };
+}
+```
+
+e. In the function `applyFilter()`, comment out the following two lines:
+
+```
+    for (int rii = 0; rii < static_cast<int> (removed_indices_->size ()); ++rii)  // rii = removed indices iterator
+      output.points[(*removed_indices_)[rii]].x = output.points[(*removed_indices_)[rii]].y = output.points[(*removed_indices_)[rii]].z = user_filter_value_;
+```
+
+and instead, add the following line in its place:
+
+```
+pcl::PassthroughHelper<PointT>::resetRemovedIndicesXYZValues(output, removed_indices_, user_filter_value_);
+```
+
+f. In the function `applyFilterIndices()`, comment out the following lines:
+
+```
+      if (!pcl_isfinite (input_->points[(*indices_)[iii]].x) ||
+          !pcl_isfinite (input_->points[(*indices_)[iii]].y) ||
+          !pcl_isfinite (input_->points[(*indices_)[iii]].z))
+      {
+        if (extract_removed_indices_)
+          (*removed_indices_)[rii++] = (*indices_)[iii];
+        continue;
+      }
+```
+
+and instead add the following code:
+
+```
+      if (!pcl::PassthroughHelper<PointT>::passNonFiniteEntriesToRemovedIndices(input_, indices_, removed_indices_, extract_removed_indices_, iii, &rii)) continue;
+```
+
+Note that the above code appears twice in the same function and both those instances need to be replaced.
+
+
+7. We need to make region growing multi-threaded.
+
+a. Open `E:\libs\pcl\src\segmentation\include\pcl\segmentation\imp\region_growing.hpp`.
+b. At the top below `#include <time.h>`, add the following code:
+
+```
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+```
+
+c. In function `findPointNeighbors()`, add OpenMP. Replace the following code:
+
+```
+template <typename PointT, typename NormalT> void
+pcl::RegionGrowing<PointT, NormalT>::findPointNeighbours ()
+{
+  int point_number = static_cast<int> (indices_->size ());
+  std::vector<int> neighbours;
+  std::vector<float> distances;
+
+  point_neighbours_.resize (input_->points.size (), neighbours);
+  if (input_->is_dense)
+  {
+    #pragma omp parallel for
+    for (int i_point = 0; i_point < point_number; i_point++)
+    {
+      int point_index = (*indices_)[i_point];
+      neighbours.clear ();
+      search_->nearestKSearch (i_point, neighbour_number_, neighbours, distances);
+      point_neighbours_[point_index].swap (neighbours);
+    }
+  }
+  else
+  {
+    #pragma omp parallel for
+    for (int i_point = 0; i_point < point_number; i_point++)
+    {
+      neighbours.clear ();
+      int point_index = (*indices_)[i_point];
+      if (!pcl::isFinite (input_->points[point_index]))
+        continue;
+      search_->nearestKSearch (i_point, neighbour_number_, neighbours, distances);
+      point_neighbours_[point_index].swap (neighbours);
+    }
+  }
+}
+```
+
+with the following code:
+
+```
+template <typename PointT, typename NormalT> void
+pcl::RegionGrowing<PointT, NormalT>::findPointNeighbours ()
+{
+  int point_number = static_cast<int> (indices_->size ());
+  std::vector<int> neighbours;
+  std::vector<float> distances;
+
+  point_neighbours_.resize (input_->points.size (), neighbours);
+  if (input_->is_dense)
+  {
+    #pragma omp parallel for private(neighbours)
+    for (int i_point = 0; i_point < point_number; i_point++)
+    {
+      int point_index = (*indices_)[i_point];
+      neighbours.clear ();
+      search_->nearestKSearch (i_point, neighbour_number_, neighbours, distances);
+      point_neighbours_[point_index].swap (neighbours);
+    }
+  }
+  else
+  {
+    #pragma omp parallel for private(neighbours)
+    for (int i_point = 0; i_point < point_number; i_point++)
+    {
+      neighbours.clear ();
+      int point_index = (*indices_)[i_point];
+      if (!pcl::isFinite (input_->points[point_index]))
+        continue;
+      search_->nearestKSearch (i_point, neighbour_number_, neighbours, distances);
+      point_neighbours_[point_index].swap (neighbours);
+    }
+  }
+}
+
+```
+
+d. In the function `applySmoothRegionGrowingAlgorithm()`, add OpenMP. Replace the following code:
+
+```
+  if (normal_flag_ == true)
+  {
+    for (int i_point = 0; i_point < num_of_pts; i_point++)
+    {
+      int point_index = (*indices_)[i_point];
+      point_residual[i_point].first = normals_->points[point_index].curvature;
+      point_residual[i_point].second = point_index;
+    }
+    std::sort (point_residual.begin (), point_residual.end (), comparePair);
+  }
+  else
+  {
+    for (int i_point = 0; i_point < num_of_pts; i_point++)
+    {
+      int point_index = (*indices_)[i_point];
+      point_residual[i_point].first = 0;
+      point_residual[i_point].second = point_index;
+    }
+  }
+```
+
+with
+
+```
+  if (normal_flag_ == true)
+  {
+    #pragma omp parallel for schedule(static, 1024)
+    for (int i_point = 0; i_point < num_of_pts; i_point++)
+    {
+      int point_index = (*indices_)[i_point];
+      point_residual[i_point].first = normals_->points[point_index].curvature;
+      point_residual[i_point].second = point_index;
+    }
+    std::sort (point_residual.begin (), point_residual.end (), comparePair);
+  }
+  else
+  {
+    #pragma omp parallel for schedule(static, 1024)
+    for (int i_point = 0; i_point < num_of_pts; i_point++)
+    {
+      int point_index = (*indices_)[i_point];
+      point_residual[i_point].first = 0;
+      point_residual[i_point].second = point_index;
+    }
+  }
+```
+
+
+7. Open `E:\libs\pcl\src\features\include\pcl\features\impl\board.hpp` and add OpenMP for loop in `computeFeature()` function. It should look like:
 
 ```
   #pragma omp parallel for
@@ -366,7 +645,7 @@ At the top of the file, make sure to add
   if (first_no_border < 0) first_no_border = 0;
 ```
 
-6. Open `E:\libs\pcl\src\recognition\include\pcl\recognition\impl\cg\geometric_consistency.hpp`. In function `clusterCorrespondences (std::vector<Correspondences> &model_instances)`, there is a `for` loop on line 104. It looks like:
+6. DO NOT DO THIS. IT SLOWS DOWN THE ALGORITHM. Open `E:\libs\pcl\src\recognition\include\pcl\recognition\impl\cg\geometric_consistency.hpp`. In function `clusterCorrespondences (std::vector<Correspondences> &model_instances)`, there is a `for` loop on line 104. It looks like:
 
 ```
         for (size_t k = 0; k < consensus_set.size (); ++k)
@@ -427,7 +706,7 @@ Change the above `for` loop to:
         }
 ```
 
-7. Open `E:\libs\pcl\src\sample_consensus\include\pcl\sample_consensus\impl\ransac.hpp`. In function `computeModel(int)`, there is a `while` loop. It looks like:
+7. DO NOT DO THIS. IT SLOWS DOWN THE ALGORITHM. Open `E:\libs\pcl\src\sample_consensus\include\pcl\sample_consensus\impl\ransac.hpp`. In function `computeModel(int)`, there is a `while` loop. It looks like:
 
 ```
   while (iterations_ < k && skipped_count < max_skip)
@@ -562,7 +841,288 @@ Change the above to:
   }
 ```
 
-Also delete the definition of `std::vector<int> selection` from line 60 above.
+Also delete the definition of `std::vector<int> selection` from line 61 above.
+
+8. Open `E:\libs\pcl\src\features\include\pcl\features\normal_3d.h`. Function `computePointNormal()` on line 60 looks like:
+
+```
+  template <typename PointT> inline bool
+  computePointNormal (const pcl::PointCloud<PointT> &cloud,
+                      Eigen::Vector4f &plane_parameters, float &curvature)
+  {
+    // Placeholder for the 3x3 covariance matrix at each surface patch
+    EIGEN_ALIGN16 Eigen::Matrix3f covariance_matrix;
+    // 16-bytes aligned placeholder for the XYZ centroid of a surface patch
+    Eigen::Vector4f xyz_centroid;
+
+    if (cloud.size () < 3 ||
+        computeMeanAndCovarianceMatrix (cloud, covariance_matrix, xyz_centroid) == 0)
+    {
+      plane_parameters.setConstant (std::numeric_limits<float>::quiet_NaN ());
+      curvature = std::numeric_limits<float>::quiet_NaN ();
+      return false;
+    }
+
+    // Get the plane normal and surface curvature
+    solvePlaneParameters (covariance_matrix, xyz_centroid, plane_parameters, curvature);
+    return true;
+  }
+```
+
+Change the above to
+
+```
+  template <typename PointT> inline bool
+  computePointNormal (const pcl::PointCloud<PointT> &cloud,
+                      Eigen::Vector4f &plane_parameters, float &curvature)
+  {
+    // Placeholder for the 3x3 covariance matrix at each surface patch
+    EIGEN_ALIGN16 Eigen::Matrix3d covariance_matrix;
+    // 16-bytes aligned placeholder for the XYZ centroid of a surface patch
+    Eigen::Vector4d xyz_centroid;
+	compute3DCentroid(cloud, xyz_centroid);
+    if (cloud.size () < 3 ||
+        computeCovarianceMatrixNormalized (cloud, xyz_centroid, covariance_matrix) == 0)
+    {
+      plane_parameters.setConstant (std::numeric_limits<float>::quiet_NaN ());
+      curvature = std::numeric_limits<float>::quiet_NaN ();
+      return false;
+    }
+
+    // Get the plane normal and surface curvature
+    solvePlaneParameters (covariance_matrix.cast<float>(), xyz_centroid.cast<float>(), plane_parameters, curvature);
+    return true;
+  }
+```
+
+9. Open `E:\libs\pcl\src\features\include\pcl\features\normal_3d.h`. Function `computePointNormal()` on line 92 looks like:
+
+```
+  template <typename PointT> inline bool
+  computePointNormal (const pcl::PointCloud<PointT> &cloud, const std::vector<int> &indices,
+                      Eigen::Vector4f &plane_parameters, float &curvature)
+  {
+    // Placeholder for the 3x3 covariance matrix at each surface patch
+    EIGEN_ALIGN16 Eigen::Matrix3f covariance_matrix;
+    // 16-bytes aligned placeholder for the XYZ centroid of a surface patch
+    Eigen::Vector4f xyz_centroid;
+    if (indices.size () < 3 ||
+        computeMeanAndCovarianceMatrix(cloud, indices, covariance_matrix, xyz_centroid) == 0)
+    {
+      plane_parameters.setConstant (std::numeric_limits<float>::quiet_NaN ());
+      curvature = std::numeric_limits<float>::quiet_NaN ();
+      return false;
+    }
+    // Get the plane normal and surface curvature
+    solvePlaneParameters (covariance_matrix.cast<float>(), xyz_centroid.cast<float>(), plane_parameters, curvature);
+    return true;
+  }
+```
+
+Change the above to
+
+```
+  template <typename PointT> inline bool
+  computePointNormal (const pcl::PointCloud<PointT> &cloud, const std::vector<int> &indices,
+                      Eigen::Vector4f &plane_parameters, float &curvature)
+  {
+    // Placeholder for the 3x3 covariance matrix at each surface patch
+    EIGEN_ALIGN16 Eigen::Matrix3d covariance_matrix;
+    // 16-bytes aligned placeholder for the XYZ centroid of a surface patch
+    Eigen::Vector4d xyz_centroid;
+	compute3DCentroid(cloud, indices, xyz_centroid);
+    if (indices.size () < 3 ||
+        computeCovarianceMatrixNormalized(cloud, indices, xyz_centroid, covariance_matrix) == 0)
+    {
+      plane_parameters.setConstant (std::numeric_limits<float>::quiet_NaN ());
+      curvature = std::numeric_limits<float>::quiet_NaN ();
+      return false;
+    }
+    // Get the plane normal and surface curvature
+    solvePlaneParameters (covariance_matrix.cast<float>(), xyz_centroid.cast<float>(), plane_parameters, curvature);
+    return true;
+  }
+```
+
+10. Open `E:\libs\pcl\src\sample_consensus\include\pcl\sample_consensus\sac_model_registration.h`. Function computeSampleDistanceThreshold() on line 265 looks like:
+
+```
+      inline void
+      computeSampleDistanceThreshold (const PointCloudConstPtr &cloud,
+                                      const std::vector<int> &indices)
+      {
+        // Compute the principal directions via PCA
+        Eigen::Vector4f xyz_centroid;
+        Eigen::Matrix3f covariance_matrix;
+        computeMeanAndCovarianceMatrix (*cloud, indices, covariance_matrix, xyz_centroid);
+
+        // Check if the covariance matrix is finite or not.
+        for (int i = 0; i < 3; ++i)
+          for (int j = 0; j < 3; ++j)
+            if (!pcl_isfinite (covariance_matrix.coeffRef (i, j)))
+              PCL_ERROR ("[pcl::SampleConsensusModelRegistration::computeSampleDistanceThreshold] Covariance matrix has NaN values! Is the input cloud finite?\n");
+
+        Eigen::Vector3f eigen_values;
+        pcl::eigen33 (covariance_matrix, eigen_values);
+
+        // Compute the distance threshold for sample selection
+        sample_dist_thresh_ = eigen_values.array ().sqrt ().sum () / 3.0;
+        sample_dist_thresh_ *= sample_dist_thresh_;
+        PCL_DEBUG ("[pcl::SampleConsensusModelRegistration::setInputCloud] Estimated a sample selection distance threshold of: %f\n", sample_dist_thresh_);
+      }
+```
+
+Change the above to
+
+```
+      inline void
+      computeSampleDistanceThreshold (const PointCloudConstPtr &cloud,
+                                      const std::vector<int> &indices)
+      {
+        // Compute the principal directions via PCA
+        Eigen::Vector4d xyz_centroid;
+        Eigen::Matrix3d covariance_matrix;
+		compute3DCentroid(*cloud, indices, xyz_centroid);
+		computeCovarianceMatrixNormalized(*cloud, indices, xyz_centroid, covariance_matrix);
+
+        // Check if the covariance matrix is finite or not.
+        for (int i = 0; i < 3; ++i)
+          for (int j = 0; j < 3; ++j)
+            if (!pcl_isfinite (covariance_matrix.coeffRef (i, j)))
+              PCL_ERROR ("[pcl::SampleConsensusModelRegistration::computeSampleDistanceThreshold] Covariance matrix has NaN values! Is the input cloud finite?\n");
+
+        Eigen::Vector3f eigen_values;
+        pcl::eigen33 (covariance_matrix, eigen_values);
+
+        // Compute the distance threshold for sample selection
+        sample_dist_thresh_ = eigen_values.array ().sqrt ().sum () / 3.0;
+        sample_dist_thresh_ *= sample_dist_thresh_;
+        PCL_DEBUG ("[pcl::SampleConsensusModelRegistration::setInputCloud] Estimated a sample selection distance threshold of: %f\n", sample_dist_thresh_);
+      }
+```
+
+
+10. Open `E:\libs\pcl\src\kdtree\include\pcl\kdtree\impl\kdtree_flann.hpp`. In function `radiusSearch()`, at line 193, just below `params.max_neighbors = max_nn;`, add the following:
+
+```
+#ifdef _OPENMP
+  params.cores = omp_get_max_threads();
+#endif // _OPENMP
+```
+
+At the top of the file, add:
+
+```
+#ifdef _OPENMP
+#include <omp.h>
+#endif // _OPENMP
+```
+
+This ensures that radius search uses all the cores possible instead of just one.
+
+
+11. Later versions of VC++ compiler has a bug which results in an error `'pcl::io::ply::ply_parser::scalar_property_definition_callbacks_type::callbacks_element<U1>': cannot access private struct declared in class 'pcl::io::ply::ply_parser::scalar_property_definition_callbacks_type'`. As per [Spurious compiler error webpage](https://developercommunity.visualstudio.com/content/problem/70100/spurious-compiler-error-complaining-about-nested-t.html), make the `callbacks_element` member of the `list_property_definition_callbacks_type` and `scalar_property_definition_callbacks_type` classes as public instead of private in the file `E:/libs/pcl/src/io/include/pcl/io/ply/ply_parser.h`.
+
+On line 117, following should be the definition of the class `scalar_property_definition_callbacks_type`.
+
+```          
+          class scalar_property_definition_callbacks_type
+          {
+            public:
+              template <typename T>
+              struct callbacks_element
+              {
+//                callbacks_element () : callback ();
+                typedef T scalar_type;
+                typename scalar_property_definition_callback_type<scalar_type>::type callback;
+              };
+
+            private:
+              typedef boost::mpl::inherit_linearly<
+                scalar_types,
+                boost::mpl::inherit<
+                boost::mpl::_1,
+                callbacks_element<boost::mpl::_2>
+                >
+                >::type callbacks;
+              callbacks callbacks_;
+
+            public:
+              template <typename ScalarType>
+              const typename scalar_property_definition_callback_type<ScalarType>::type&
+              get () const
+              {
+                return (static_cast<const callbacks_element<ScalarType>&> (callbacks_).callback);
+              }
+
+              template <typename ScalarType>
+              typename scalar_property_definition_callback_type<ScalarType>::type&
+              get ()
+              {
+                return (static_cast<callbacks_element<ScalarType>&> (callbacks_).callback);
+              }
+
+              template <typename ScalarType>
+              friend typename scalar_property_definition_callback_type<ScalarType>::type&
+              at (scalar_property_definition_callbacks_type& scalar_property_definition_callbacks);
+
+              template <typename ScalarType>
+              friend const typename scalar_property_definition_callback_type<ScalarType>::type&
+              at (const scalar_property_definition_callbacks_type& scalar_property_definition_callbacks);
+          };
+```
+
+On line 210, following should be the definition of the class `list_property_definition_callbacks_type`:
+
+```
+          class list_property_definition_callbacks_type
+          {
+            public:
+              template <typename T>
+              struct callbacks_element
+              {
+                typedef typename T::first size_type;
+                typedef typename T::second scalar_type;
+                typename list_property_definition_callback_type<size_type, scalar_type>::type callback;
+              };
+
+            private:
+              template <typename T> struct pair_with : boost::mpl::pair<T,boost::mpl::_> {};
+              template<typename Sequence1, typename Sequence2>
+
+                struct sequence_product :
+                  boost::mpl::fold<Sequence1, boost::mpl::vector0<>,
+                    boost::mpl::joint_view<
+                      boost::mpl::_1,boost::mpl::transform<Sequence2, pair_with<boost::mpl::_2> > > >
+                {};
+
+              typedef boost::mpl::inherit_linearly<sequence_product<size_types, scalar_types>::type, boost::mpl::inherit<boost::mpl::_1, callbacks_element<boost::mpl::_2> > >::type callbacks;
+              callbacks callbacks_;
+
+            public:
+              template <typename SizeType, typename ScalarType>
+              typename list_property_definition_callback_type<SizeType, ScalarType>::type&
+              get ()
+              {
+                return (static_cast<callbacks_element<boost::mpl::pair<SizeType, ScalarType> >&> (callbacks_).callback);
+              }
+
+              template <typename SizeType, typename ScalarType>
+              const typename list_property_definition_callback_type<SizeType, ScalarType>::type&
+              get () const
+              {
+                return (static_cast<const callbacks_element<boost::mpl::pair<SizeType, ScalarType> >&> (callbacks_).callback);
+              }
+
+              template <typename SizeType, typename ScalarType>
+              friend typename list_property_definition_callback_type<SizeType, ScalarType>::type&
+              at (list_property_definition_callbacks_type& list_property_definition_callbacks);
+
+              template <typename SizeType, typename ScalarType>
+              friend const typename list_property_definition_callback_type<SizeType, ScalarType>::type&
+              at (const list_property_definition_callbacks_type& list_property_definition_callbacks);
+          };
+```
 
 
 ### Debug build without Qt
@@ -613,13 +1173,12 @@ cd builds\win64-shared-debug-cl-qt
 2. Compile.
 
 ```
-cmake -G "NMake Makefiles" -DEIGEN_ROOT=E:\libs\Eigen\builds\win64-debug-cl\dist\include -DFLANN_ROOT=E:\libs\flann\builds\win64-debug-cl\dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:\libs\qhull\builds\win64-debug-cl\dist\ -DQHULL_INCLUDE_DIR=E:\libs\qhull\builds\win64-debug-cl\dist\include\ -DVTK_DIR=E:\libs\vtk\builds\win64-shared-debug-cl-qt -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBOOST_LIBRARYDIR=E:\libs\boost\builds\win64-static-cl\lib\ -DBoost_COMPILER=-vc141 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_examples:BOOL=ON -DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON ..\..\src\
-jom.exe
-jom.exe install
+cmake -G "Ninja" -DEIGEN_ROOT=E:/libs/Eigen/builds/win64-debug-cl/dist/include -DFLANN_ROOT=E:/libs/flann/builds/win64-debug-cl/dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:/libs/qhull/builds/win64-debug-cl/dist -DQHULL_INCLUDE_DIR=E:/libs/qhull/builds/win64-debug-cl/dist/include -DVTK_DIR=E:/libs/vtk/builds/win64-shared-debug-cl-qt -DBOOST_ROOT=E:/libs/boost/builds/win64-static-debug-cl -DBOOST_LIBRARYDIR=E:/libs/boost/builds/win64-static-debug-cl/lib -DBoost_COMPILER=-vc141 -DQt5_DIR=E:/libs/qt/builds/win64-shared-debug/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_examples:BOOL=ON -DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON ../../src
+ninja.exe install
 ```
 
 
-### Release build without Qt
+### Release build with Qt
 
 1. Create `builds\win64-static-release-cl-qt` and change into it.
 
@@ -631,9 +1190,8 @@ cd builds\win64-static-release-cl-qt
 2. Compile.
 
 ```
-cmake -G "NMake Makefiles" -DEIGEN_ROOT=E:\libs\Eigen\builds\win64-release-cl\dist\include -DFLANN_ROOT=E:\libs\flann\builds\win64-release-cl\dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:\libs\qhull\builds\win64-release-cl\dist\ -DQHULL_INCLUDE_DIR=E:\libs\qhull\builds\win64-release-cl\dist\include\ -DVTK_DIR=E:\libs\vtk\builds\win64-shared-release-cl-qt -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBOOST_LIBRARYDIR=E:\libs\boost\builds\win64-static-cl\lib\ -DBoost_COMPILER=-vc141 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_examples:BOOL=ON ..\..\src\
-jom.exe
-jom.exe install
+cmake -G "Ninja" -DEIGEN_ROOT=E:/libs/Eigen/builds/win64-release-cl/dist/include -DFLANN_ROOT=E:/libs/flann/builds/win64-release-cl/dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:/libs/qhull/builds/win64-release-cl/dist -DQHULL_INCLUDE_DIR=E:/libs/qhull/builds/win64-release-cl/dist/include -DVTK_DIR=E:/libs/vtk/builds/win64-shared-release-cl-qt -DBOOST_ROOT=E:/libs/boost/builds/win64-static-release-cl -DBOOST_LIBRARYDIR=E:/libs/boost/builds/win64-static-release-cl/lib -DBoost_COMPILER=-vc141 -DQt5_DIR=E:/libs/qt/builds/win64-shared-release/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_examples:BOOL=ON -DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON ../../src
+ninja.exe install
 ```
 
 ### Static Debug build with Qt
@@ -648,7 +1206,139 @@ cd builds\win64-static-debug-cl-qt
 2. Compile.
 
 ```
-cmake -G "NMake Makefiles" -DEIGEN_ROOT=E:\libs\Eigen\builds\win64-debug-cl\dist\include -DFLANN_ROOT=E:\libs\flann\builds\win64-debug-cl\dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:\libs\qhull\builds\win64-debug-cl\dist\ -DQHULL_INCLUDE_DIR=E:\libs\qhull\builds\win64-debug-cl\dist\include\ -DVTK_DIR=E:\libs\vtk\builds\win64-shared-debug-cl-qt -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBOOST_LIBRARYDIR=E:\libs\boost\builds\win64-static-cl\lib\ -DBoost_COMPILER=-vc141 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=OFF -DPCL_SHARED_LIBS:BOOL=OFF -DBUILD_examples:BOOL=ON ..\..\src\
+cmake -G "NMake Makefiles" -DEIGEN_ROOT=E:\libs\Eigen\builds\win64-debug-cl\dist\include -DFLANN_ROOT=E:\libs\flann\builds\win64-debug-cl\dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=E:\libs\qhull\builds\win64-debug-cl\dist\ -DQHULL_INCLUDE_DIR=E:\libs\qhull\builds\win64-debug-cl\dist\include\ -DVTK_DIR=E:\libs\vtk\builds\win64-shared-debug-cl-qt -DBOOST_ROOT=E:\libs\boost\builds\win64-static-cl\ -DBOOST_LIBRARYDIR=E:\libs\boost\builds\win64-static-cl\lib\ -DBoost_COMPILER=-vc141 -DQt5_DIR=E:/libs/qt/builds/win64-shared-debug/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=OFF -DPCL_SHARED_LIBS:BOOL=OFF -DBUILD_examples:BOOL=ON ..\..\src\
 jom.exe
 jom.exe install
 ```
+
+## Install 
+
+1. Clone OpenCV [git repo](https://github.com/opencv/opencv) in `E:\libs\OpenCV\src`. 
+
+```bash
+mkdir E:\libs\OpenCV
+E:
+cd E:\libs\OpenCV
+git clone https://github.com/opencv/opencv.git src
+```
+
+2. There is an error in the file `cmake/OpenCVFindLibsPerf.cmake`. Remove `/include` after `$ENV{EIGEN_ROOT}`. The command should be:
+
+```bash
+  find_path(EIGEN_INCLUDE_PATH "Eigen/Core"
+            PATHS /usr/local /opt /usr $ENV{EIGEN_ROOT} ENV ProgramFiles ENV ProgramW6432
+            PATH_SUFFIXES include/eigen3 include/eigen2 Eigen/include/eigen3 Eigen/include/eigen2
+            DOC "The path to Eigen3/Eigen2 headers"
+            CMAKE_FIND_ROOT_PATH_BOTH)
+```
+
+
+### Debug build
+
+1. Create the environment variable `EIGEN_ROOT`:
+
+```
+set EIGEN_ROOT=E:\libs\Eigen\builds\win64-debug-cl\dist
+```
+
+2. Create a directory `builds\win64-shared-debug-cl` in `E:\libs\OpenCV` and change into it.
+
+```
+mkdir builds/win64-shared-debug-cl
+cd builds\win64-shared-debug-cl
+```
+
+3. Compile.
+
+D3D needs OpenCV's `core`, `photo` and `highhui` modules only so that `Histogram2D`, `Histogram3D` and `DBSCAN3D` can be compiled. Hence we'll disable all modules except these.
+
+```
+cmake -G "Ninja" -DCMAKE_INSTALL_PREFIX=dist -DWITH_EIGEN:BOOL=ON -DWITH_OPENGL:BOOL=OFF -DWITH_QT:BOOL=OFF -DWITH_OPENMP:BOOL=ON -DWITH_VTK:BOOL=OFF -DWITH_CUDA:BOOL=OFF -DWITH_OPENCL:BOOL=OFF -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_opencv_objdetect:BOOL=OFF -DBUILD_opencv_video:BOOL=OFF -DBUILD_opencv_dnn:BOOL=OFF -DBUILD_opencv_shape:BOOL=OFF -DBUILD_opencv_videoio:BOOL=OFF -DBUILD_opencv_superres:BOOL=OFF -DBUILD_opencv_ts:BOOL=OFF -DBUILD_opencv_flann:BOOL=OFF -DBUILD_opencv_ml:BOOL=OFF ..\..\src\
+ninja.exe
+ninja.exe install
+```
+
+4. unset `EIGEN_ROOT` environment variable.
+
+```
+set EIGEN_ROOT=
+```
+
+### Release build
+
+1. Create the environment variable `EIGEN_ROOT`:
+
+```
+set EIGEN_ROOT=E:\libs\Eigen\builds\win64-release-cl\dist
+```
+
+2. Create a directory `builds\win64-shared-release-cl` in `E:\libs\OpenCV` and change into it.
+
+```
+mkdir builds/win64-shared-release-cl
+cd builds\win64-shared-release-cl
+```
+
+3. Compile.
+
+D3D needs OpenCV's `core`, `photo` and `highhui` modules only so that `Histogram2D`, `Histogram3D` and `DBSCAN3D` can be compiled. Hence we'll disable all modules except these.
+
+```
+cmake -G "Ninja" -DCMAKE_INSTALL_PREFIX=dist -DWITH_EIGEN:BOOL=ON -DWITH_OPENGL:BOOL=OFF -DWITH_QT:BOOL=OFF -DWITH_OPENMP:BOOL=ON -DWITH_VTK:BOOL=OFF -DWITH_CUDA:BOOL=OFF -DWITH_OPENCL:BOOL=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_opencv_objdetect:BOOL=OFF -DBUILD_opencv_video:BOOL=OFF -DBUILD_opencv_dnn:BOOL=OFF -DBUILD_opencv_shape:BOOL=OFF -DBUILD_opencv_videoio:BOOL=OFF -DBUILD_opencv_superres:BOOL=OFF -DBUILD_opencv_ts:BOOL=OFF -DBUILD_opencv_flann:BOOL=OFF -DBUILD_opencv_ml:BOOL=OFF ..\..\src\
+ninja.exe
+ninja.exe install
+```
+
+4. unset `EIGEN_ROOT` environment variable.
+
+```
+set EIGEN_ROOT=
+```
+
+
+
+## Install NLOpt
+
+1. Create a directory `E:\libs\nlopt`.
+
+2. Download NLOpt from http://ab-initio.mit.edu/nlopt/nlopt-2.4.2.tar.gz.
+
+3. Unzip and untar above to `E:\libs\nlopt\nlopt-2.4.2`.
+
+4. According to https://nlopt.readthedocs.io/en/latest/NLopt_on_Windows/, there exists CMakeLists.txt and config.cmake.h.in file for Windows. Download them from http://ab-initio.mit.edu/nlopt/CMakeLists.txt and http://ab-initio.mit.edu/nlopt/config.cmake.h.in respectively.
+
+### Debug build
+
+1. Create directory `builds\win64-shared-debug-cl` in `E:\libs\nlopt` and change into it.
+
+```
+mkdir builds/win64-shared-debug-cl
+cd builds\win64-shared-debug-cl
+```
+
+2. Compile and install.
+
+```
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_INSTALL_PREFIX=dist ..\..\nlopt-2.4.2\
+ninja.exe install
+```
+
+### Release build
+
+1. Create directory `builds\win64-shared-release-cl` in `E:\libs\nlopt` and change into it.
+
+```
+mkdir builds/win64-shared-release-cl
+cd builds\win64-shared-release-cl
+```
+
+2. Compile and install.
+
+```
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_INSTALL_PREFIX=dist ..\..\nlopt-2.4.2\
+ninja.exe install
+```
+
+
+
+## Install ApproxMVBB

@@ -203,52 +203,78 @@ cd /Users/neeravbm/Documents/libs/qhull
 git clone https://github.com/qhull/qhull.git src
 ```
 
-### Release build
-
-8. Create directory `/Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang` and build `qhull` into it using cmake.
+8. Since Qhull's static libraries are going to be used to build PCL's shared libraries, Qhull's static libraries need to be compiled using `-fPIC`. Open `/Users/neeravbm/Documents/libs/qhull/src/CMakeLists.txt` and set `POSITION_INDEPENDENT_CODE` to `ON` for all the static libraries. Specifically on line 355, code should look as:
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang
-cd /Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang
+add_library(${qhull_STATIC} STATIC ${libqhull_SOURCES})
+set_target_properties(${qhull_STATIC} PROPERTIES
+    VERSION ${qhull_VERSION}
+	POSITION_INDEPENDENT_CODE ON)
+
+add_library(${qhull_STATICR} STATIC ${libqhullr_SOURCES})
+set_target_properties(${qhull_STATICR} PROPERTIES
+    VERSION ${qhull_VERSION}
+	POSITION_INDEPENDENT_CODE ON)
+```
+
+On line 375, code should look like:
+
+```bash
+add_library(${qhull_CPP} STATIC ${libqhullcpp_SOURCES})
+set_target_properties(${qhull_CPP} PROPERTIES
+    VERSION ${qhull_VERSION}
+	POSITION_INDEPENDENT_CODE ON)
+```
+
+
+### Release build
+
+8. Create directory `/Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang` and build `qhull` into it using cmake.
+
+```bash
+mkdir -p /Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang
+cd /Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src
 make
 make install
 ```
 
-This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang/dist` directory.
+This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang/dist` directory.
 
-9. Unfortunately, on Mac OSX, this doesn't seem to create `lib` and `bin` directories so we'll have to create them manually.
+9. Unfortunately, on Mac OSX and Ubuntu, this doesn't seem to create `lib` and `bin` directories so we'll have to create them manually.
 
 ```bash
-cd /Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang
+cd /Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang
 mkdir -p dist/lib
 mv libqhull* dist/lib/
 mkdir -p dist/bin
 mv q* dist/bin/
+mv rbox dist/bin
 ```
 
 ### Debug build
 
-10. Create directory `/Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang` and build `qhull` into it using cmake.
+10. Create directory `/Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang` and build `qhull` into it using cmake.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang
-cd /Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang
+mkdir -p /Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang
+cd /Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
 make
 make install
 ```
 
-This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang/dist` directory.
+This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang/dist` directory.
 
 11. Unfortunately, on Mac OSX, this doesn't seem to create `lib` and `bin` directories so we'll have to create them manually.
 
 ```bash
-cd /Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang
+cd /Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang
 mkdir -p dist/lib
 mv libqhull* dist/lib/
 mkdir -p dist/bin
 mv q* dist/bin/
+mv rbox dist/bin
 ```
 
 
@@ -294,7 +320,7 @@ This will install `googletest` in `/Users/neeravbm/Documents/libs/googletest/bui
 
 ## Install Qt (Optional)
 
-15. Download `Qt` source from [its website](http://download.qt.io/official_releases/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz) and copy it to `/Users/neeravbm/Documents/libs/Qt`.
+15. Download `Qt` source from [its website](http://download.qt.io/official_releases/l/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz) and copy it to `/Users/neeravbm/Documents/libs/Qt`.
 
 ```bash
 mkdir /Users/neeravbm/Documents/libs/Qt
@@ -471,11 +497,11 @@ cd flann-1.8.4-src
 
 ### Debug build
 
-6. Create `/Users/neeravbm/Documents/libs/flann/builds/osx-shared-debug-clang` directory and build using cmake.
+6. Create `/Users/neeravbm/Documents/libs/flann/builds/osx-debug-clang` directory and build using cmake.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/flann/builds/osx-shared-debug-clang
-cd /Users/neeravbm/Documents/libs/flann/builds/osx-shared-debug-clang
+mkdir -p /Users/neeravbm/Documents/libs/flann/builds/osx-debug-clang
+cd /Users/neeravbm/Documents/libs/flann/builds/osx-debug-clang
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../flann-1.8.4-src
 make
 make install
@@ -485,11 +511,11 @@ This will create `dist` directory with compiled library.
 
 ### Release build
 
-7. Create `/Users/neeravbm/Documents/libs/flann/builds/osx-shared-release-clang` directory and build using cmake.
+7. Create `/Users/neeravbm/Documents/libs/flann/builds/osx-release-clang` directory and build using cmake.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/flann/builds/osx-shared-release-clang
-cd /Users/neeravbm/Documents/libs/flann/builds/osx-shared-release-clang
+mkdir -p /Users/neeravbm/Documents/libs/flann/builds/osx-release-clang
+cd /Users/neeravbm/Documents/libs/flann/builds/osx-release-clang
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../flann-1.8.4-src
 make
 make install
@@ -604,7 +630,7 @@ cd /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-clang
 Mac OSX:
 
 ```bash
-cmake -DEIGEN_ROOT=/Users/neeravbm/Documents/libs/Eigen/builds/osx-release-clang/dist/include -DFLANN_ROOT=/Users/neeravbm/Documents/libs/flann/builds/osx-shared-release-clang/dist -DQHULL_ROOT=/Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang/dist -DVTK_DIR=/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang -DBOOST_ROOT=/Users/neeravbm/Documents/libs/boost/boost_1_61_0_src -DBOOST_LIBRARYDIR=/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src/
+cmake -DEIGEN_ROOT=/Users/neeravbm/Documents/libs/Eigen/builds/osx-release-clang/dist/include -DFLANN_ROOT=/Users/neeravbm/Documents/libs/flann/builds/osx-shared-release-clang/dist -DQHULL_ROOT=/Users/neeravbm/Documents/libs/qhull/builds/osx-release-clang/dist -DVTK_DIR=/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang -DBOOST_ROOT=/Users/neeravbm/Documents/libs/boost/boost_1_61_0_src -DBOOST_LIBRARYDIR=/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DBUILD_examples:BOOL=ON -DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON ../../src/
 make
 make install
 ```
@@ -612,7 +638,7 @@ make install
 Ubuntu:
 
 ```bash
-cmake -DEIGEN_ROOT=/mnt/Applications/libs/Eigen/builds/ubuntu-release-gcc/dist/include -DFLANN_ROOT=/mnt/Applications/libs/flann/builds/ubuntu-shared-release-gcc/dist -DQHULL_ROOT=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc/dist -DVTK_DIR=/mnt/Applications/libs/vtk/builds/ubuntu-shared-release-gcc -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src
+cmake -DEIGEN_ROOT=/mnt/Applications/libs/Eigen/builds/ubuntu-release-gcc/dist/include -DFLANN_ROOT=/mnt/Applications/libs/flann/builds/ubuntu-shared-release-gcc/dist -DQHULL_USE_STATIC:BOOL=ON -DQHULL_ROOT=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc/dist -DQHULL_INCLUDE_DIR=/mnt/Applications/libs/qhull/builds/ubuntu-release-gcc/dist/include -DVTK_DIR=/mnt/Applications/libs/vtk/builds/ubuntu-shared-release-gcc -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_examples:BOOL=ON -DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON ../../src
 make -j8
 make install
 ```
@@ -640,13 +666,13 @@ cd /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang
 Mac OSX:
 
 ```bash
-cmake -DEIGEN_ROOT=/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang/dist/include -DFLANN_ROOT=/Users/neeravbm/Documents/libs/flann/builds/osx-shared-debug-clang/dist -DQHULL_ROOT=/Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang/dist -DVTK_DIR=/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang -DBOOST_ROOT=/Users/neeravbm/Documents/libs/boost/boost_1_61_0_src -DBOOST_LIBRARYDIR=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src/
+cmake -DEIGEN_ROOT=/Users/neeravbm/Documents/libs/Eigen/builds/osx-debug-clang/dist/include -DFLANN_ROOT=/Users/neeravbm/Documents/libs/flann/builds/osx-shared-debug-clang/dist -DQHULL_ROOT=/Users/neeravbm/Documents/libs/qhull/builds/osx-debug-clang/dist -DVTK_DIR=/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang -DBOOST_ROOT=/Users/neeravbm/Documents/libs/boost/boost_1_61_0_src -DBOOST_LIBRARYDIR=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang-1.61/stage/lib -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_examples:BOOL=ON -DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON ../../src/
 ```
 
 Ubuntu:
 
 ```bash
-cmake -DEIGEN_ROOT=/mnt/Applications/libs/Eigen/builds/ubuntu-debug-gcc/dist/include -DFLANN_ROOT=/mnt/Applications/libs/flann/builds/ubuntu-shared-debug-gcc/dist -DQHULL_ROOT=/mnt/Applications/libs/qhull/builds/ubuntu-debug-gcc/dist -DVTK_DIR=/mnt/Applications/libs/vtk/builds/ubuntu-shared-debug-gcc -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/lib/cmake/Qt5 -DWITH_CUDA:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
+cmake -DEIGEN_ROOT=/mnt/Applications/libs/Eigen/builds/ubuntu-debug-gcc/dist/include -DFLANN_ROOT=/mnt/Applications/libs/flann/builds/ubuntu-shared-debug-gcc/dist -DQHULL_ROOT=/mnt/Applications/libs/qhull/builds/ubuntu-debug-gcc/dist -DVTK_DIR=/mnt/Applications/libs/vtk/builds/ubuntu-shared-debug-gcc -DBOOST_ROOT=/mnt/Applications/libs/boost/boost_1_61_0 -DBOOST_LIBRARYDIR=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage/lib -DQt5_DIR=/mnt/Applications/libs/qt/builds/ubuntu-debug-gcc/lib/cmake/Qt5 -DWITH_CUDA:BOOL=OFF -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Debug -DBUILD_examples:BOOL=ON -DPCL_NO_PRECOMPILE:BOOL=OFF -DPCL_ONLY_CORE_POINT_TYPES:BOOL=ON ../../src
 make -j8
 make install
 ```
