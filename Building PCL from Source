@@ -46,6 +46,20 @@ make install
 
 Above should install LAPACK and BLAS libraries in `/mnt/Applications/libs/lapack/builds/ubuntu-shared-release-gcc/dist/lib`.
 
+## Install gcc
+
+This is needed on Mac OSX since it doesn't come with gfortran, which Eigen needs. `gcc` also enables OpenMP, which `clang` doesn't.
+
+```bash
+brew install gcc
+# gcc should link to Homebrew gcc and not clang because we need to provide it to boost as toolset
+ln -s /usr/local/Cellar/gcc/7.3.0/bin/gcc-7 /usr/local/opt/gcc/bin/gcc
+ln -s /usr/local/Cellar/gcc/7.3.0/bin/g++-7 /usr/local/opt/gcc/bin/g++
+export PATH="/usr/local/opt/gcc/bin;$PATH"
+# Rehash the shell
+hash -r
+```
+
 
 
 ## Install Eigen
@@ -53,12 +67,12 @@ Above should install LAPACK and BLAS libraries in `/mnt/Applications/libs/lapack
 1. Download Eigen at `/Users/neeravbm/Documents/libs/Eigen/src` from [Eigen website](http://bitbucket.org/eigen/eigen/get/3.3.0.tar.gz).
 
 ### Debug build
-2. Create `builds/osx-debug-clang` directory and change into it.
+2. Create `builds/osx-debug-gcc` directory and change into it.
 
 ```bash
 cd /Users/neeravbm/Documents/libs/Eigen
-mkdir -p builds/osx-debug-clang
-cd builds/osx-debug-clang
+mkdir -p builds/osx-debug-gcc
+cd builds/osx-debug-gcc
 ```
 
 3. Build using `cmake`, `make` and `make install`.
@@ -66,7 +80,7 @@ cd builds/osx-debug-clang
 Mac OSX:
 
 ```bash
-cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
+cmake -DCMAKE_C_COMPILER=/usr/local/opt/gcc/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/local/opt/gcc/bin/g++-7 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
 make
 make install
 ```
@@ -84,12 +98,12 @@ This will create `dist` directory with Eigen library.
 
 ### Release build
 
-4. Create `builds/osx-release-clang` directory and change into it.
+4. Create `builds/osx-release-gcc` directory and change into it.
 
 ```bash
 cd /Users/neeravbm/Documents/libs/Eigen
-mkdir -p builds/osx-release-clang
-cd builds/osx-release-clang
+mkdir -p builds/osx-release-gcc
+cd builds/osx-release-gcc
 ```
 
 5. Build using `cmake`, `make` and `make install`.
@@ -163,7 +177,7 @@ cd /Users/neeravbm/Documents/libs/boost/boost_1_61_0_src
 Mac OSX:
 
 ```bash
-../b2_1.61/bin/b2 --build-dir=/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61 --prefix=/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61 --stagedir=/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61/stage variant=release toolset=clang threading=multi
+../b2_1.61/bin/b2 --build-dir=/Users/neeravbm/Documents/libs/boost/builds/osx-release-gcc-1.61 --prefix=/Users/neeravbm/Documents/libs/boost/builds/osx-release-gcc-1.61 --stagedir=/Users/neeravbm/Documents/libs/boost/builds/osx-release-gcc-1.61/stage variant=release toolset=clang threading=multi
 ```
 
 Ubuntu:
@@ -172,7 +186,7 @@ Ubuntu:
 ../b2_1.61/bin/b2 --build-dir=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61 --prefix=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61 --stagedir=/mnt/Applications/libs/boost/builds/ubuntu-release-gcc-1.61/stage variant=release toolset=gcc threading=multi
 ```
 
-Above command will install boost's shared and static libraries in `/Users/neeravbm/Documents/libs/boost/builds/osx-release-clang-1.61/stage/lib` directory. You may see an error that `pyconfig.h` was not found, but you can safely ignore that.
+Above command will install boost's shared and static libraries in `/Users/neeravbm/Documents/libs/boost/builds/osx-release-gcc-1.61/stage/lib` directory. You may see an error that `pyconfig.h` was not found, but you can safely ignore that.
 
 #### Debug build
 
@@ -181,7 +195,7 @@ Above command will install boost's shared and static libraries in `/Users/neerav
 Mac OSX:
 
 ```bash
-../b2/bin/b2 --build-dir=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang --prefix=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang --stagedir=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang/stage variant=debug toolset=clang threading=multi
+../b2/bin/b2 --build-dir=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-gcc --prefix=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-gcc --stagedir=/Users/neeravbm/Documents/libs/boost/builds/osx-debug-gcc/stage variant=debug toolset=clang threading=multi
 ```
 
 Ubuntu:
@@ -190,7 +204,7 @@ Ubuntu:
 ../b2_1.61/bin/b2 --build-dir=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61 --prefix=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61 --stagedir=/mnt/Applications/libs/boost/builds/ubuntu-debug-gcc-1.61/stage variant=debug toolset=gcc threading=multi
 ```
 
-Above command will install boost's shared and static libraries in `/Users/neeravbm/Documents/libs/boost/builds/osx-debug-clang/stage/lib` directory.
+Above command will install boost's shared and static libraries in `/Users/neeravbm/Documents/libs/boost/builds/osx-debug-gcc/stage/lib` directory.
 
 
 ## Install Qhull (Optional for PCL but may be required by our application later)
@@ -229,22 +243,23 @@ set_target_properties(${qhull_CPP} PROPERTIES
 
 ### Release build
 
-8. Create directory `/Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang` and build `qhull` into it using cmake.
+8. Create directory `/Users/neeravbm/Documents/libs/qhull/builds/osx-release-gcc` and build `qhull` into it using cmake.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang
-cd /Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang
-cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src
+mkdir -p /Users/neeravbm/Documents/libs/qhull/builds/osx-release-gcc
+cd /Users/neeravbm/Documents/libs/qhull/builds/osx-release-gcc
+cmake -DCMAKE_C_COMPILER=/usr/local/opt/gcc/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/local/opt/gcc/bin/g++-7 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release ../../src
 make
 make install
 ```
 
-This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang/dist` directory.
+This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-release-gcc/dist` directory.
+
 
 9. Unfortunately, on Mac OSX and Ubuntu, this doesn't seem to create `lib` and `bin` directories so we'll have to create them manually.
 
 ```bash
-cd /Users/neeravbm/Documents/libs/qhull/builds/osx-static-release-clang
+cd /Users/neeravbm/Documents/libs/qhull/builds/osx-release-gcc
 mkdir -p dist/lib
 mv libqhull* dist/lib/
 mkdir -p dist/bin
@@ -254,22 +269,22 @@ mv rbox dist/bin
 
 ### Debug build
 
-10. Create directory `/Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang` and build `qhull` into it using cmake.
+10. Create directory `/Users/neeravbm/Documents/libs/qhull/builds/osx-debug-gcc` and build `qhull` into it using cmake.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang
-cd /Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang
-cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
+mkdir -p /Users/neeravbm/Documents/libs/qhull/builds/osx-debug-gcc
+cd /Users/neeravbm/Documents/libs/qhull/builds/osx-debug-gcc
+cmake -DCMAKE_C_COMPILER=/usr/local/opt/gcc/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/local/opt/gcc/bin/g++-7 -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug ../../src
 make
 make install
 ```
 
-This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang/dist` directory.
+This will create `/Users/neeravbm/Documents/libs/qhull/builds/osx-debug-gcc/dist` directory.
 
 11. Unfortunately, on Mac OSX, this doesn't seem to create `lib` and `bin` directories so we'll have to create them manually.
 
 ```bash
-cd /Users/neeravbm/Documents/libs/qhull/builds/osx-static-debug-clang
+cd /Users/neeravbm/Documents/libs/qhull/builds/osx-debug-gcc
 mkdir -p dist/lib
 mv libqhull* dist/lib/
 mkdir -p dist/bin
@@ -292,29 +307,29 @@ git clone https://github.com/google/googletest.git src
 
 ### Debug build
 
-13. Create directory `/Users/neeravbm/Documents/libs/googletest/builds/osx-debug-clang` and build `googletest` into it using cmake.
+13. Create directory `/Users/neeravbm/Documents/libs/googletest/builds/osx-debug-gcc` and build `googletest` into it using cmake.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/googletest/builds/osx-debug-clang
-cd /Users/neeravbm/Documents/libs/googletest/builds/osx-debug-clang
+mkdir -p /Users/neeravbm/Documents/libs/googletest/builds/osx-debug-gcc
+cd /Users/neeravbm/Documents/libs/googletest/builds/osx-debug-gcc
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Debug -DBUILD_GTEST=ON ../../src
 make
 make install
 ```
-This will install `googletest` in `/Users/neeravbm/Documents/libs/googletest/builds/osx-debug-clang/dist` folder.
+This will install `googletest` in `/Users/neeravbm/Documents/libs/googletest/builds/osx-debug-gcc/dist` folder.
 
 ### Release build
 
-14. Create directory `/Users/neeravbm/Documents/libs/googletest/builds/osx-release-clang` and build `googletest` into it using cmake.
+14. Create directory `/Users/neeravbm/Documents/libs/googletest/builds/osx-release-gcc` and build `googletest` into it using cmake.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/googletest/builds/osx-release-clang
-cd /Users/neeravbm/Documents/libs/googletest/builds/osx-release-clang
+mkdir -p /Users/neeravbm/Documents/libs/googletest/builds/osx-release-gcc
+cd /Users/neeravbm/Documents/libs/googletest/builds/osx-release-gcc
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_BUILD_TYPE=Release -DBUILD_GTEST=ON ../../src
 make
 make install
 ```
-This will install `googletest` in `/Users/neeravbm/Documents/libs/googletest/builds/osx-release-clang/dist` folder.
+This will install `googletest` in `/Users/neeravbm/Documents/libs/googletest/builds/osx-release-gcc/dist` folder.
 
 
 
@@ -360,7 +375,7 @@ As per [Qt documentation](https://wiki.qt.io/Install_Qt_5_on_Ubuntu#cite_note-1)
 On Mac
 
 ```bash
-./configure -prefix /Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang -nomake examples -opensource -confirm-license -no-framework -debug-and-release
+./configure -prefix /Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-gcc -nomake examples -opensource -confirm-license -no-framework -debug-and-release
 make -j4
 make install
 ```
@@ -402,11 +417,11 @@ git clone https://gitlab.kitware.com/vtk/vtk.git src
 
 ### Release build
 
-20. Create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang` and change into it.
+20. Create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-gcc` and change into it.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang
-cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang
+mkdir -p /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-gcc
+cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-gcc
 ```
 
 21. Build using `cmake`, `make` and `make install`.
@@ -414,7 +429,7 @@ cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang
 Mac OSX:
 
 ```bash
-cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DVTK_USE_SYSTEM_HDF5:BOOL=ON -DHDF5_ROOT=/Users/neeravbm/Documents/libs/hdf5/builds/osx-shared-release-clang/dist -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DVTK_USE_SYSTEM_HDF5:BOOL=ON -DHDF5_ROOT=/Users/neeravbm/Documents/libs/hdf5/builds/osx-shared-release-gcc/dist -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
 make
 make install
 ```
@@ -424,7 +439,7 @@ make install
 Mac OSX:
 
 ```bash
-ln -s ~/Documents/libs/vtk/builds/osx-shared-release-clang/lib/libQVTKWidgetPlugin.dylib ~/Documents/libs/qt/builds/osx-static-debug-release-clang/plugins/designer/libQVTKWidgetPlugin.dylib
+ln -s ~/Documents/libs/vtk/builds/osx-shared-release-gcc/lib/libQVTKWidgetPlugin.dylib ~/Documents/libs/qt/builds/osx-static-debug-release-gcc/plugins/designer/libQVTKWidgetPlugin.dylib
 ```
 
 
@@ -436,7 +451,7 @@ make
 make install
 ```
 
-Above will create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-clang/dist` containing the compiled library.
+Above will create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-release-gcc/dist` containing the compiled library.
 
 22. Link `libQVTKWidgetPlugin.so` in QT to VTK so that QT can use this plugin in the designer.
 
@@ -446,11 +461,11 @@ ln -s /mnt/Applications/libs/vtk/builds/ubuntu-shared-release-gcc/dist/plugins/d
 
 ### Debug build
 
-20. Create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang` and change into it.
+20. Create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-gcc` and change into it.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang
-cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang
+mkdir -p /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-gcc
+cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-gcc
 ```
 
 21. Build using `cmake`, `make` and `make install`.
@@ -458,7 +473,7 @@ cd /Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang
 Mac OSX:
 
 ```bash
-cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-clang/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DVTK_USE_SYSTEM_HDF5:BOOL=ON -DHDF5_ROOT=/Users/neeravbm/Documents/libs/hdf5/builds/osx-shared-debug-clang/dist -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=dist -DQT_QMAKE_EXECUTABLE:PATH=/Users/neeravbm/Documents/libs/qt/builds/osx-static-debug-release-gcc/bin/qmake -DVTK_Group_Qt:BOOL=ON -DVTK_QT_VERSION:STRING=5 -DVTK_USE_COCOA:BOOL=ON -DVTK_USE_X:BOOL=OFF -DVTK_USE_CARBON:BOOL=OFF -DVTK_USE_SYSTEM_HDF5:BOOL=ON -DHDF5_ROOT=/Users/neeravbm/Documents/libs/hdf5/builds/osx-shared-debug-gcc/dist -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ../../src
 make
 make install
 ```
@@ -471,7 +486,7 @@ make -j8
 make install
 ```
 
-Above will create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-clang/dist` containing the compiled library.
+Above will create a directory `/Users/neeravbm/Documents/libs/vtk/builds/osx-shared-debug-gcc/dist` containing the compiled library.
 
 22. Link `libQVTKWidgetPlugin.so` in QT to VTK so that QT can use this plugin in the designer.
 
@@ -618,11 +633,11 @@ endforeach()
 
 ### Release build
 
-2. Create a directory `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-clang`.
+2. Create a directory `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-gcc`.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-clang
-cd /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-clang
+mkdir -p /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-gcc
+cd /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-gcc
 ```
 
 3. Compile the library using `cmake`, `make` and `make install`.
@@ -643,9 +658,9 @@ make -j8
 make install
 ```
 
-Above command will compile PCL in `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-clang/dist`.
+Above command will compile PCL in `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-gcc/dist`.
 
-4. There is an error in `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-clang/PCLConfig.cmake` which makes it impossible for external programs to find `Boost` when including PCL. `FindBoost.cmake` sets the variable `Boost_FOUND` to `TRUE` if Boost is found but `PCLConfig.cmake` checks for `BOOST_FOUND` in function `find_external_library()` on line 668. To circumvent this bug, add the following after the line `find_package(Boost 1.40.0 ${QUIET_} COMPONENTS system filesystem thread date_time iostreams serialization chrono)` in the macro `find_boost()` in `PCLConfig.cmake`:
+4. There is an error in `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-release-gcc/PCLConfig.cmake` which makes it impossible for external programs to find `Boost` when including PCL. `FindBoost.cmake` sets the variable `Boost_FOUND` to `TRUE` if Boost is found but `PCLConfig.cmake` checks for `BOOST_FOUND` in function `find_external_library()` on line 668. To circumvent this bug, add the following after the line `find_package(Boost 1.40.0 ${QUIET_} COMPONENTS system filesystem thread date_time iostreams serialization chrono)` in the macro `find_boost()` in `PCLConfig.cmake`:
 
 ```bash
 find_package(Boost 1.40.0 ${QUIET_} COMPONENTS system filesystem thread date_time iostreams serialization chrono)
@@ -654,11 +669,11 @@ set(BOOST_FOUND ${Boost_FOUND})
 
 ### Debug build
 
-5. Create a directory `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang`.
+5. Create a directory `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-gcc`.
 
 ```bash
-mkdir -p /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang
-cd /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang
+mkdir -p /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-gcc
+cd /Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-gcc
 ```
 
 6. Compile the library using `cmake`, `make` and `make install`.
@@ -678,9 +693,9 @@ make install
 ```
 
 
-Above command will compile PCL in `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang/dist`.
+Above command will compile PCL in `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-gcc/dist`.
 
-7. There is an error in `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-clang/PCLConfig.cmake` which makes it impossible for external programs to find `Boost` when including PCL. `FindBoost.cmake` sets the variable `Boost_FOUND` to `TRUE` if Boost is found but `PCLConfig.cmake` checks for `BOOST_FOUND` in function `find_external_library()` on line 668. To circumvent this bug, add the following after the line `find_package(Boost 1.40.0 ${QUIET_} COMPONENTS system filesystem thread date_time iostreams serialization chrono)` in the macro `find_boost()` in `PCLConfig.cmake`:
+7. There is an error in `/Users/neeravbm/Documents/libs/pcl/builds/osx-shared-debug-gcc/PCLConfig.cmake` which makes it impossible for external programs to find `Boost` when including PCL. `FindBoost.cmake` sets the variable `Boost_FOUND` to `TRUE` if Boost is found but `PCLConfig.cmake` checks for `BOOST_FOUND` in function `find_external_library()` on line 668. To circumvent this bug, add the following after the line `find_package(Boost 1.40.0 ${QUIET_} COMPONENTS system filesystem thread date_time iostreams serialization chrono)` in the macro `find_boost()` in `PCLConfig.cmake`:
 
 ```bash
 find_package(Boost 1.40.0 ${QUIET_} COMPONENTS system filesystem thread date_time iostreams serialization chrono)
